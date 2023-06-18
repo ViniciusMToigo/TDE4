@@ -1,3 +1,0 @@
-D:/UCS/Linguagens Formais/TDE4/cmake-build-debug/CMakeFiles/TDE4.dir
-D:/UCS/Linguagens Formais/TDE4/cmake-build-debug/CMakeFiles/edit_cache.dir
-D:/UCS/Linguagens Formais/TDE4/cmake-build-debug/CMakeFiles/rebuild_cache.dir
