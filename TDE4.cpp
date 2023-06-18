@@ -379,7 +379,7 @@ void getToken()
     }// while
 }// funcao
 
-
+// Protótipo das Funções do Analisador Sintático
 int ProgramaC();
 
 int RestoProgramaC();
@@ -395,8 +395,6 @@ int DeclaracaoSpec1Linha();
 int Tipo();
 
 int InitDeclaracaoLista();
-
-int InitDeclaracaoLista1Hash();
 
 int InitDeclaracao();
 
@@ -414,8 +412,6 @@ int RestoDeclaracaoDireto3();
 
 int ListaParametro();
 
-int ListaParametro1Hash();
-
 int DeclaracaoParametro();
 
 int DeclaracaoParametro1Linha();
@@ -432,8 +428,6 @@ int Funcao1Linha();
 
 int ListaDeclaracao();
 
-int ListaDeclaracao1Hash();
-
 int ComandoComposto();
 
 int ComandoComposto2();
@@ -441,8 +435,6 @@ int ComandoComposto2();
 int ComandoComposto21Linha();
 
 int ListaComando();
-
-int ListaComando1Hash();
 
 int Comando();
 
@@ -528,8 +520,9 @@ int Expressao();
 
 int RestoExpressao();
 
-// <*********** INICIO DO ANALISADOR SINT�TICO DESCENDENTE RECURSIVO SEM RETROCESSO ***********>
+// <*********** INICIO DO ANALISADOR SINTÁTICO DESCENDENTE RECURSIVO SEM RETROCESSO ***********>
 
+//Implemente aqui a sua função getToken()
 
 //ProgramaC -> Funcao RestoProgramaC | Declaracao RestoProgramaC
 int ProgramaC(){
@@ -590,28 +583,29 @@ int Declaracao1Linha(){
             getToken();
             return 1;
         }//fecha24
-        else{
-            printf("Erro, esperava token ';'\n");
-            printf("ERRO NA FUNCAO 'Declaracao1Linha'\n");
-            return 0;}
+        else{return 0;}
     }//fecha24
-    else{
-        printf("Erro, esperava token ';'\n");
-        printf("ERRO NA FUNCAO 'Declaracao1Linha'\n");
-        return 0;}
+    else{return 0;}
 }//fecha25
 
 //DeclaracaoSpec -> Tipo DeclaracaoSpec1Linha
 int DeclaracaoSpec(){
     if (Tipo()){
-        return 1;
-    }
-    else{
-        return 0;
-    }
+        if (DeclaracaoSpec1Linha()){
+            return 1;
+        }//fecha22
+        else{return 0;}
+    }//fecha22
+    else{return 0;}
 }//fecha25
 
-
+//DeclaracaoSpec1Linha -> DeclaracaoSpec | ?
+int DeclaracaoSpec1Linha(){
+    if (DeclaracaoSpec()){
+        return 1;
+    }//fecha21
+    else {return 1;}
+}//fecha25
 
 //Tipo -> void | char | short | int | long | float | double | unsigned
 int Tipo(){
@@ -647,38 +641,25 @@ int Tipo(){
         getToken();
         return 1;
     }//fecha23
-    else{
-        printf("Erro, esperava token de inicializacao (void, char, short, int, long, float, double, unsigned...\n");
-        printf("ERRO NA FUNCAO 'TIPO'\n");
-        return 0;}
-}//fecha25
-
-//InitDeclaracaoLista -> InitDeclaracao InitDeclaracaoLista1Hash
-int InitDeclaracaoLista(){
-    if (InitDeclaracao()){
-        if (InitDeclaracaoLista1Hash()){
-            return 1;
-        }//fecha22
-        else{return 0;}
-    }//fecha22
     else{return 0;}
 }//fecha25
 
-//InitDeclaracaoLista1Hash -> , InitDeclaracao InitDeclaracaoLista1Hash | ?
-int InitDeclaracaoLista1Hash(){
-    if(tk == TKVirgula){// ,
-        getToken();
-        if (InitDeclaracao()){
-            if (InitDeclaracaoLista1Hash()){
+//InitDeclaracaoLista -> InitDeclaracao | InitDeclaracaoLista , InitDeclaracao
+int InitDeclaracaoLista(){
+    if (InitDeclaracao()){
+        return 1;
+    }//fecha21
+    else 	if (InitDeclaracaoLista()){
+        if(tk == TKVirgula){// ,
+            getToken();
+            if (InitDeclaracao()){
                 return 1;
             }//fecha22
             else{return 0;}
         }//fecha22
         else{return 0;}
     }//fecha22
-    else {
-        printf("WARNING NA FUNCAO InitDeclaracaoLista1Hash esperava ',' e derivou vazio\n");
-        return 1;}
+    else{return 0;}
 }//fecha25
 
 //InitDeclaracao -> Declaracao InitDeclaracao1Linha
@@ -701,9 +682,7 @@ int InitDeclaracao1Linha(){
         }//fecha22
         else{return 0;}
     }//fecha22
-    else {
-        printf("WARNING NA FUNCAO InitDeclaracao1Linha esperava '=' e derivou vazio\n");
-        return 1;}
+    else {return 1;}
 }//fecha25
 
 //Pointer -> * Pointer | ?
@@ -715,9 +694,7 @@ int Pointer(){
         }//fecha22
         else{return 0;}
     }//fecha22
-    else {
-        printf("WARNING NA FUNCAO Pointer esperava '*' e derivou vazio\n");
-        return 1;}
+    else {return 1;}
 }//fecha25
 
 //DeclaracaoDireto -> id RestoDeclaracaoDireto | ( Declaracao ) RestoDeclaracaoDireto
@@ -739,17 +716,11 @@ int DeclaracaoDireto(){
                 }//fecha22
                 else{return 0;}
             }//fecha22
-            else{
-                printf("ERRO NA FUNCAO 'DeclaracaoDireto'\n");
-                printf("Erro, esperava token ')'\n");
-                return 0;}
+            else{return 0;}
         }//fecha22
         else{return 0;}
     }//fecha22
-    else{
-        printf("ERRO NA FUNCAO 'DeclaracaoDireto'\n");
-        printf("Erro, esperava token 'TKId ou ('\n");
-        return 0;}
+    else{return 0;}
 }//fecha25
 
 //RestoDeclaracaoDireto -> [ RestoDeclaracaoDireto2 | ( RestoDeclaracaoDireto3
@@ -768,10 +739,7 @@ int RestoDeclaracaoDireto(){
         }//fecha22
         else{return 0;}
     }//fecha22
-    else{
-        printf("ERRO NA FUNCAO 'RestoDeclaracaoDireto'\n");
-        printf("Erro, esperava token '[ ou ('\n");
-        return 0;}
+    else{return 0;}
 }//fecha25
 
 //RestoDeclaracaoDireto2 -> ExpressaoOr ] RestoDeclaracaoDireto | ] RestoDeclaracaoDireto
@@ -784,10 +752,7 @@ int RestoDeclaracaoDireto2(){
             }//fecha22
             else{return 0;}
         }//fecha22
-        else{
-            printf("ERRO NA FUNCAO 'RestoDeclaracaoDireto2'\n");
-            printf("Erro, esperava token ']'\n");
-            return 0;}
+        else{return 0;}
     }//fecha22
     else if(tk == TKFechaColchetes){// ]
         getToken();
@@ -796,10 +761,7 @@ int RestoDeclaracaoDireto2(){
         }//fecha22
         else{return 0;}
     }//fecha22
-    else{
-        printf("ERRO NA FUNCAO 'RestoDeclaracaoDireto2'\n");
-        printf("Erro, esperava token ']'\n");
-        return 0;}
+    else{return 0;}
 }//fecha25
 
 //RestoDeclaracaoDireto3 -> ListaParametro ) RestoDeclaracaoDireto | ListaIdentificadores ) RestoDeclaracaoDireto | ) RestoDeclaracaoDireto
@@ -812,10 +774,7 @@ int RestoDeclaracaoDireto3(){
             }//fecha22
             else{return 0;}
         }//fecha22
-        else{
-            printf("ERRO NA FUNCAO 'RestoDeclaracaoDireto3'\n");
-            printf("Erro, esperava token ')'\n");
-            return 0;}
+        else{return 0;}
     }//fecha22
     else 	if (ListaIdentificadores()){
         if(tk == TKFechaParenteses){// )
@@ -825,10 +784,7 @@ int RestoDeclaracaoDireto3(){
             }//fecha22
             else{return 0;}
         }//fecha22
-        else{
-            printf("ERRO NA FUNCAO 'RestoDeclaracaoDireto3'\n");
-            printf("Erro, esperava token ')'\n");
-            return 0;}
+        else{return 0;}
     }//fecha22
     else if(tk == TKFechaParenteses){// )
         getToken();
@@ -837,38 +793,25 @@ int RestoDeclaracaoDireto3(){
         }//fecha22
         else{return 0;}
     }//fecha22
-    else{
-        printf("ERRO NA FUNCAO 'RestoDeclaracaoDireto3'\n");
-        printf("Erro, esperava token ')'\n");
-        return 0;}
-}//fecha25
-
-//ListaParametro -> DeclaracaoParametro ListaParametro1Hash
-int ListaParametro(){
-    if (DeclaracaoParametro()){
-        if (ListaParametro1Hash()){
-            return 1;
-        }//fecha22
-        else{return 0;}
-    }//fecha22
     else{return 0;}
 }//fecha25
 
-//ListaParametro1Hash -> , DeclaracaoParametro ListaParametro1Hash | ?
-int ListaParametro1Hash(){
-    if(tk == TKVirgula){// ,
-        getToken();
-        if (DeclaracaoParametro()){
-            if (ListaParametro1Hash()){
+//ListaParametro -> DeclaracaoParametro | ListaParametro , DeclaracaoParametro
+int ListaParametro(){
+    if (DeclaracaoParametro()){
+        return 1;
+    }//fecha21
+    else 	if (ListaParametro()){
+        if(tk == TKVirgula){// ,
+            getToken();
+            if (DeclaracaoParametro()){
                 return 1;
             }//fecha22
             else{return 0;}
         }//fecha22
         else{return 0;}
     }//fecha22
-    else {
-        printf("WARNING NA FUNCAO ListaParametro1Hash esperava ',' e derivou vazio\n");
-        return 1;}
+    else{return 0;}
 }//fecha25
 
 //DeclaracaoParametro -> DeclaracaoSpec DeclaracaoParametro1Linha
@@ -899,10 +842,7 @@ int ListaIdentificadores(){
         }//fecha22
         else{return 0;}
     }//fecha22
-    else{
-        printf("ERRO NA FUNCAO 'ListaIdentificadores'\n");
-        printf("Erro, esperava token 'TKid'\n");
-        return 0;}
+    else{return 0;}
 }//fecha25
 
 //RestoListaIdentificadores -> , id RestoListaIdentificadores | ?
@@ -914,16 +854,11 @@ int RestoListaIdentificadores(){
             if (RestoListaIdentificadores()){
                 return 1;
             }//fecha22
-            else{
-                printf("ERRO NA FUNCAO 'RestoListaIdentificadores'\n");
-                printf("Erro, esperava token 'TKid'\n");
-                return 0;}
+            else{return 0;}
         }//fecha22
         else{return 0;}
     }//fecha22
-    else {
-        printf("WARNING NA FUNCAO RestoListaIdentificadores esperava ',' e derivou vazio\n");
-        return 1;}
+    else {return 1;}
 }//fecha25
 
 //Funcao -> DeclaracaoSpec Declaracao Funcao1Linha | Declaracao Funcao2Linha
@@ -974,26 +909,18 @@ int Funcao1Linha(){
     else{return 0;}
 }//fecha25
 
-//ListaDeclaracao -> Declaracao ListaDeclaracao1Hash
+//ListaDeclaracao -> Declaracao | ListaDeclaracao Declaracao
 int ListaDeclaracao(){
     if (Declaracao()){
-        if (ListaDeclaracao1Hash()){
+        return 1;
+    }//fecha21
+    else 	if (ListaDeclaracao()){
+        if (Declaracao()){
             return 1;
         }//fecha22
         else{return 0;}
     }//fecha22
     else{return 0;}
-}//fecha25
-
-//ListaDeclaracao1Hash -> Declaracao ListaDeclaracao1Hash | ?
-int ListaDeclaracao1Hash(){
-    if (Declaracao()){
-        if (ListaDeclaracao1Hash()){
-            return 1;
-        }//fecha22
-        else{return 0;}
-    }//fecha22
-    else {return 1;}
 }//fecha25
 
 //ComandoComposto -> { ComandoComposto2
@@ -1005,10 +932,7 @@ int ComandoComposto(){
         }//fecha22
         else{return 0;}
     }//fecha22
-    else{
-        printf("ERRO NA FUNCAO 'ComandoComposto'\n");
-        printf("Erro, esperava token '{'\n");
-        return 0;}
+    else{return 0;}
 }//fecha25
 
 //ComandoComposto2 -> } | ListaComando } | ListaDeclaracao ComandoComposto21Linha
@@ -1022,10 +946,7 @@ int ComandoComposto2(){
             getToken();
             return 1;
         }//fecha24
-        else{
-            printf("ERRO NA FUNCAO 'ComandoComposto2'\n");
-            printf("Erro, esperava token '}'\n");
-            return 0;}
+        else{return 0;}
     }//fecha24
     else 	if (ListaDeclaracao()){
         if (ComandoComposto21Linha()){
@@ -1033,10 +954,7 @@ int ComandoComposto2(){
         }//fecha22
         else{return 0;}
     }//fecha22
-    else{
-        printf("ERRO NA FUNCAO 'ComandoComposto2'\n");
-        printf("Erro, esperava token '}'\n");
-        return 0;}
+    else{return 0;}
 }//fecha25
 
 //ComandoComposto21Linha -> } | ListaComando }
@@ -1050,37 +968,23 @@ int ComandoComposto21Linha(){
             getToken();
             return 1;
         }//fecha24
-        else{
-            printf("ERRO NA FUNCAO 'ComandoComposto21Linha'\n");
-            printf("Erro, esperava token '}'\n");
-            return 0;}
+        else{return 0;}
     }//fecha24
-    else{
-        printf("ERRO NA FUNCAO 'ComandoComposto21Linha'\n");
-        printf("Erro, esperava token '}'\n");
-        return 0;}
+    else{return 0;}
 }//fecha25
 
-//ListaComando -> Comando ListaComando1Hash
+//ListaComando -> Comando | ListaComando Comando
 int ListaComando(){
     if (Comando()){
-        if (ListaComando1Hash()){
+        return 1;
+    }//fecha21
+    else 	if (ListaComando()){
+        if (Comando()){
             return 1;
         }//fecha22
         else{return 0;}
     }//fecha22
     else{return 0;}
-}//fecha25
-
-//ListaComando1Hash -> Comando ListaComando1Hash | ?
-int ListaComando1Hash(){
-    if (Comando()){
-        if (ListaComando1Hash()){
-            return 1;
-        }//fecha22
-        else{return 0;}
-    }//fecha22
-    else {return 1;}
 }//fecha25
 
 //Comando -> ComandoComposto | ComandoExpressao | ComandoSelecao | ComandoIterativo
@@ -1111,15 +1015,9 @@ int ComandoExpressao(){
             getToken();
             return 1;
         }//fecha24
-        else{
-            printf("ERRO NA FUNCAO 'ComandoExpressao'\n");
-            printf("Erro, esperava token ';'\n");
-            return 0;}
+        else{return 0;}
     }//fecha24
-    else{
-        printf("ERRO NA FUNCAO 'ComandoExpressao'\n");
-        printf("Erro, esperava token ';'\n");
-        return 0;}
+    else{return 0;}
 }//fecha25
 
 //ComandoSelecao -> if ( Expressao ) Comando ComandoSelecao1Linha
@@ -1139,22 +1037,13 @@ int ComandoSelecao(){
                     }//fecha22
                     else{return 0;}
                 }//fecha22
-                else{
-                    printf("ERRO NA FUNCAO 'ComandoSelecao'\n");
-                    printf("Erro, esperava token ')'\n");
-                    return 0;}
+                else{return 0;}
             }//fecha22
             else{return 0;}
         }//fecha22
-        else{
-            printf("ERRO NA FUNCAO 'ComandoSelecao'\n");
-            printf("Erro, esperava token '('\n");
-            return 0;}
+        else{return 0;}
     }//fecha22
-    else{
-        printf("ERRO NA FUNCAO 'ComandoSelecao'\n");
-        printf("Erro, esperava token 'TKif'\n");
-        return 0;}
+    else{return 0;}
 }//fecha25
 
 //ComandoSelecao1Linha -> else Comando | ?
@@ -1166,9 +1055,7 @@ int ComandoSelecao1Linha(){
         }//fecha22
         else{return 0;}
     }//fecha22
-    else {
-        printf("WARNING NA FUNCAO ComandoSelecao1Linha esperava 'else' e derivou vazio\n");
-        return 1;}
+    else {return 1;}
 }//fecha25
 
 //ComandoIterativo -> while ( Expressao ) Comando | do Comando while ( Expressao ) ; | for ( ComandoExpressao ComandoExpressao ComandoIterativo1Linha
@@ -1185,17 +1072,11 @@ int ComandoIterativo(){
                     }//fecha22
                     else{return 0;}
                 }//fecha22
-                else{
-                    printf("ERRO NA FUNCAO 'ComandoIterativo'\n");
-                    printf("Erro, esperava token ')'\n");
-                    return 0;}
+                else{return 0;}
             }//fecha22
             else{return 0;}
         }//fecha22
-        else{
-            printf("ERRO NA FUNCAO 'ComandoIterativo'\n");
-            printf("Erro, esperava token ')'\n");
-            return 0;}
+        else{return 0;}
     }//fecha22
     else if(tk == TKDo){// do
         getToken();
@@ -1211,22 +1092,13 @@ int ComandoIterativo(){
                                 getToken();
                                 return 1;
                             }//fecha24
-                            else{
-                                printf("ERRO NA FUNCAO 'ComandoIterativo'\n");
-                                printf("Erro, esperava token ';'\n");
-                                return 0;}
+                            else{return 0;}
                         }//fecha24
-                        else{
-                            printf("ERRO NA FUNCAO 'ComandoIterativo'\n");
-                            printf("Erro, esperava token ')'\n");
-                            return 0;}
+                        else{return 0;}
                     }//fecha24
                     else{return 0;}
                 }//fecha24
-                else{
-                    printf("ERRO NA FUNCAO 'ComandoIterativo'\n");
-                    printf("Erro, esperava token '('\n");
-                    return 0;}
+                else{return 0;}
             }//fecha24
             else{return 0;}
         }//fecha24
@@ -1247,15 +1119,9 @@ int ComandoIterativo(){
             }//fecha22
             else{return 0;}
         }//fecha22
-        else{
-            printf("ERRO NA FUNCAO 'ComandoIterativo'\n");
-            printf("Erro, esperava token ')'\n");
-            return 0;}
+        else{return 0;}
     }//fecha22
-    else{
-        printf("ERRO NA FUNCAO 'ComandoIterativo'\n");
-        printf("Erro, esperava token 'do' ou 'while'\n");
-        return 0;}
+    else{return 0;}
 }//fecha25
 
 //ComandoIterativo1Linha -> ) Comando | Expressao ) Comando
@@ -1277,10 +1143,7 @@ int ComandoIterativo1Linha(){
         }//fecha22
         else{return 0;}
     }//fecha22
-    else{
-        printf("ERRO NA FUNCAO 'ComandoIterativo1Linha'\n");
-        printf("Erro, esperava token ')'\n");
-        return 0;}
+    else{return 0;}
 }//fecha25
 
 //Init -> Atribuicao | { InitList Init1Linha
@@ -1298,10 +1161,7 @@ int Init(){
         }//fecha22
         else{return 0;}
     }//fecha22
-    else{
-        printf("ERRO NA FUNCAO 'Init'\n");
-        printf("Erro, esperava token '{'\n");
-        return 0;}
+    else{return 0;}
 }//fecha25
 
 //Init1Linha -> } | , }
@@ -1316,15 +1176,9 @@ int Init1Linha(){
             getToken();
             return 1;
         }//fecha24
-        else{
-            printf("ERRO NA FUNCAO 'Init1Linha'\n");
-            printf("Erro, esperava token '}'\n");
-            return 0;}
+        else{return 0;}
     }//fecha24
-    else{
-        printf("ERRO NA FUNCAO 'Init1Linha'\n");
-        printf("Erro, esperava token '}' ou ','\n");
-        return 0;}
+    else{return 0;}
 }//fecha25
 
 //InitList -> Init | RestoInitList
@@ -1350,9 +1204,7 @@ int RestoInitList(){
         }//fecha22
         else{return 0;}
     }//fecha22
-    else {
-        printf("WARNING NA FUNCAO RestoInitList esperava ',' e derivou vazio\n");
-        return 1;}
+    else {return 1;}
 }//fecha25
 
 //Atribuicao -> ExpressaoOr | ExpressaoUnaria OperadorAtribuicao Atribuicao
@@ -1395,9 +1247,7 @@ int RestoExpressaoOr(){
         }//fecha22
         else{return 0;}
     }//fecha22
-    else {
-        printf("WARNING NA FUNCAO RestoExpressaoOr esperava 'TKOuLogico' e derivou vazio\n");
-        return 1;}
+    else {return 1;}
 }//fecha25
 
 //ExpressaoAnd -> OuInclusivo RestoExpressaoAnd
@@ -1423,9 +1273,7 @@ int RestoExpressaoAnd(){
         }//fecha22
         else{return 0;}
     }//fecha22
-    else {
-        printf("WARNING NA FUNCAO RestoExpressaoAnd esperava 'TKOuLogico' e derivou vazio\n");
-        return 1;}
+    else {return 1;}
 }//fecha25
 
 //OuInclusivo -> OuExclusivo RestoOuInclusivo
@@ -1451,9 +1299,7 @@ int RestoOuInclusivo(){
         }//fecha22
         else{return 0;}
     }//fecha22
-    else {
-        printf("WARNING NA FUNCAO RestoOuInclusivo esperava 'TKOuBitwise' e derivou vazio\n");
-        return 1;}
+    else {return 1;}
 }//fecha25
 
 //OuExclusivo -> AndBitwise RestoOuExclusivo
@@ -1479,9 +1325,7 @@ int RestoOuExclusivo(){
         }//fecha22
         else{return 0;}
     }//fecha22
-    else {
-        printf("WARNING NA FUNCAO RestoOuExclusivo esperava 'TKXorBitwise' e derivou vazio\n");
-        return 1;}
+    else {return 1;}
 }//fecha25
 
 //AndBitwise -> ExpressaoIgual RestoAndBitwise
@@ -1543,9 +1387,7 @@ int RestoExpressaoIgual(){
         }//fecha22
         else{return 0;}
     }//fecha22
-    else {
-        printf("WARNING NA FUNCAO RestoExpressaoIgual esperava '= ou ==' e derivou vazio");
-        return 1;}
+    else {return 1;}
 }//fecha25
 
 //ExpressaoRelac -> ExpressaoDesl RestoExpressaoRelac
@@ -2004,8 +1846,8 @@ int RestoExpressao(){
 }//fecha25
 
 
-
 int main(){
+    //arqin=fopen("D:\\UCS\\Linguagens Formais\\TDE4\\Projetos\\TDE4_2\\codigoTeste.txt","rb");
     arqin=fopen("C:\\Users\\filip\\Documents\\Formais\\TDE4\\codigoTeste.txt","rb");
 
     if (!arqin) {

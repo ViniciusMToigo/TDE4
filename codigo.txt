@@ -1,1 +1,1 @@
-valor + 2
+void main(){}
