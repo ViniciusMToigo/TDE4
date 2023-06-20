@@ -153,11 +153,12 @@ void getToken();
 void proxC();
 
 void proxC() {
+    fread( & c, 1, 1, arqin);
     if (feof(arqin)) {
+        tk = TKFimArquivo;
         c = -1; //se chegou no fim de arquivo
         return;
     }
-    fread( & c, 1, 1, arqin);
 
     if (c == '\n') {
         //printf("CAIU NO IF ==> linha atual: %d ... coluna atual: %d ... char atual %c\n", linha, coluna, c);
