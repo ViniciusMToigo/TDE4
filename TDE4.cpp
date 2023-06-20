@@ -1,5 +1,7 @@
 #include <stdio.h>
+
 #include <stdlib.h>
+
 #include <string.h>
 
 // DEFINE TOKENS
@@ -62,324 +64,438 @@
 #define TKEAtribuicaoBitwise 116 // &=
 #define TKXorAtribuicaoBitwise 117 // ^=
 #define TKOuAtribuicaoBitwise 118 // or_assign
-#define TKLong 119 // long
+//#define TKLong 119 // long
 #define TKFimDaTabela 1000
 #define TKFimArquivo 1001
-
 
 int linha = 1;
 int coluna = 0;
 int colunaInicial = 0;
 int tk;
 char lex[20]; //lexema gerado pela sequencia de leituras de tokens
-FILE *arqin;
-FILE *filePtr;
+FILE * arqin;
+FILE * filePtr;
 
 char c; //
 
-struct palavraReservada{char palavra[20]; int tk;};
+struct palavraReservada {
+    char palavra[20];
+    int tk;
+};
 
-struct palavraReservada lista_pal[]={{"void",TKVoid},
-                                     {"int",TKInt},
-                                     {"float",TKFloat},
-                                     {"char",TKChar},
-                                     {"double",TKDouble},
-                                     {"do",TKDo},
-                                     {"while",TKWhile},
-                                     {"for",TKFor},
-                                     {"if",TKIf},
-                                     {"else",TKElse},
-                                     {"long",TKLong},
-                                     {"unsigned",TKUnsigned},
-                                     {"fimtabela", TKFimDaTabela}};
+struct palavraReservada lista_pal[] = {
+    {
+        "void",
+        TKVoid
+    },
+    {
+        "int",
+        TKInt
+    },
+    {
+        "float",
+        TKFloat
+    },
+    {
+        "char",
+        TKChar
+    },
+    {
+        "double",
+        TKDouble
+    },
+    {
+        "do",
+        TKDo
+    },
+    {
+        "while",
+        TKWhile
+    },
+    {
+        "for",
+        TKFor
+    },
+    {
+        "if",
+        TKIf
+    },
+    {
+        "else",
+        TKElse
+    },
+    {
+        "long",
+        TKLong
+    },
+    {
+        "unsigned",
+        TKUnsigned
+    },
+    {
+        "fimtabela",
+        TKFimDaTabela
+    }
+};
 
 //compara o lexema gerado (token) com as palavras da lista de palavras reservadas
-int palavra_reservada(char lex[])
-{
-    int postab=0;
-    while (strcmp("fimtabela",lista_pal[postab].palavra)!=0)
-    {
-        if (strcmp(lex,lista_pal[postab].palavra)==0){
+int palavra_reservada(char lex[]) {
+    int postab = 0;
+    while (strcmp("fimtabela", lista_pal[postab].palavra) != 0) {
+        if (strcmp(lex, lista_pal[postab].palavra) == 0) {
             return lista_pal[postab].tk; //se a palavra for igual alguma da lista, � uma palavra reservada e retornar� o token dela
-        }
-        else postab++;
+        } else postab++;
     }
     return TKId; //caso n�o seja uma palavra reservada, ser� considerada como um identificador
 }
 
-
-
 void getToken();
 void proxC();
 
-void proxC()
-{
+void proxC() {
     if (feof(arqin)) {
-        c=-1; //se chegou no fim de arquivo
+        c = -1; //se chegou no fim de arquivo
         return;
     }
-    fread(&c,1,1,arqin);
+    fread( & c, 1, 1, arqin);
 
-    if (c=='\n'){
+    if (c == '\n') {
         //printf("CAIU NO IF ==> linha atual: %d ... coluna atual: %d ... char atual %c\n", linha, coluna, c);
         linha++;
         coluna = 0;
         colunaInicial = 1;
-    }
-    else{
+    } else {
         // printf("CAIU NO ELSE ==> linha atual: %d ... coluna atual: %d ... char atual %c\n", linha, coluna, c);
         coluna++;
     }
 }
 
-void getToken()
-{
-    int estado=0, //monitora se o char � uma letra, se for, joga pra 1 para verificar se � uma palavra reservada
-    fim=0,
-            posl=0;
+void getToken() {
+    int estado = 0, //monitora se o char � uma letra, se for, joga pra 1 para verificar se � uma palavra reservada
+        fim = 0,
+        posl = 0;
     colunaInicial = coluna;
 
-    while (!fim)
-    {
-        lex[posl++]=c;
+    while (!fim) {
+        lex[posl++] = c;
         //printf("char atual: %c\n", c);
-        switch(estado){
-            case 0:
-                if (c>='a' && c<='z' || c>='A' && c<='Z' || c=='_'){proxC();estado=1;break;}
+        switch (estado) {
+        case 0:
+            if (c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z' || c == '_') {
+                proxC();
+                estado = 1;
+                break;
+            }
 
-                if (c>='0' && c<='9')
-                {
-                    posl--;
-                    while (c>='0' && c<='9'){
-                        lex[posl++] = c;
-                        proxC();
-                    }
-                    lex[posl]='\0';
-                    tk=TKInt;
+            if (c >= '0' && c <= '9') {
+                posl--;
+                while (c >= '0' && c <= '9') {
+                    lex[posl++] = c;
+                    proxC();
+                }
+                lex[posl] = '\0';
+                tk = TKInt;
+                printf("Token Selecionado %d\n", tk);
+                return;
+            }
+
+            if (c == '=') {
+                proxC();
+
+                if (c == '=') {
+                    lex[posl++] = '=';
+                    lex[posl] = '\0';
+                    proxC();
+                    tk = TKIgual;
+                    printf("Token Selecionado %d\n", tk);
+                    return;
+                } else {
+                    lex[posl] = '\0';
+                    proxC();
+                    tk = TKAtribuicao;
+                    printf("Token Selecionado %d\n", tk);
                     return;
                 }
+            }
 
-                if (c=='=')
-                {
-                    proxC();
-
-                    if (c=='=')
-                    {
-                        lex[posl++]='=';
-                        lex[posl]='\0';
-                        proxC();
-                        tk=TKIgual;/*printf("Reconheceu token TKIgual\n");*/return;
-                    }
-                    else
-                    {
-                        lex[posl]='\0';
-                        proxC();
-                        tk=TKAtribuicao;/*printf("Reconheceu token TKAtrib\n");*/return;
-                    }
+            if (c == '+') {
+                proxC();
+                if (c == '+') {
+                    lex[posl++] = '+';
+                    lex[posl] = '\0';
+                    tk = TKIncrementa;
+                    printf("Token Selecionado %d\n", tk);
+                    return;
+                } else if (c == '=') {
+                    lex[posl++] = '=';
+                    lex[posl] = '\0';
+                    tk = TKSomaAtribuicao;
+                    printf("Token Selecionado %d\n", tk);
+                    return;
+                } else {
+                    lex[posl] = '\0';
+                    tk = TKSoma;
+                    printf("Token Selecionado %d\n", tk);
+                    return;
                 }
+            }
 
-                if (c=='+')
-                {
+            if (c == '-') {
+                proxC();
+                if (c == '>') {
+                    lex[posl++] = '>';
+                    lex[posl] = '\0';
                     proxC();
-                    if (c=='+')
-                    {
-                        lex[posl++]='+';
-                        lex[posl]='\0';
-                        //proxC();
-                        tk=TKIncrementa;/*printf("Reconheceu token TKDuploMais\n");*/return;
-                    }
-                    else if (c=='=')
-                    {
-                        lex[posl++]='=';
-                        lex[posl]='\0';
-                        // proxC();
-                        tk=TKSomaAtribuicao;/*printf("Reconheceu token TKAtribMais\n");*/return;
-                    }
-                    else
-                    {
-                        lex[posl]='\0';
-                        tk=TKSoma;/*printf("Reconheceu token TKSoma\n");*/return;
-                    }
+                    tk = TKPontero;
+                    printf("Token Selecionado %d\n", tk);
+                    return;
+                } else {
+                    lex[posl] = '\0';
+                    tk = TKDecrementa;
+                    printf("Token Selecionado %d\n", tk);
+                    return;
                 }
+            }
 
-                if (c=='-')
-                {
+            if (c == '>') {
+                proxC();
+
+                if (c == '>') {
+                    lex[posl++] = '>';
+                    lex[posl] = '\0';
                     proxC();
-                    if (c=='>')
-                    {
-                        lex[posl++]='>';
-                        lex[posl]='\0';
-                        proxC();
-                        tk=TKPontero;/*printf("Reconheceu token TKAcessoPointer\n");*/return;
-                    }
-                    else
-                    {
-                        lex[posl]='\0';
-                        tk=TKDecrementa;/*printf("Reconheceu token TKSub\n");*/return;
-                    }
-                }
-
-                if (c=='>')
-                {
+                    tk = TKDireitaBitwise;
+                    printf("Token Selecionado %d\n", tk);
+                    return;
+                } else if (c == '=') {
+                    lex[posl++] = '=';
+                    lex[posl] = '\0';
                     proxC();
-
-                    if (c=='>')
-                    {
-                        lex[posl++]='>';
-                        lex[posl]='\0';
-                        proxC();
-                        tk=TKDireitaBitwise;
-                        /*printf("Reconheceu token TKBWRightShift\n");*/
-                        return;
-                    }
-                    else if (c=='=')
-                    {
-                        lex[posl++]='=';
-                        lex[posl]='\0';
-                        proxC();
-                        tk=TKMaiorOuIgual;
-                        /*printf("Reconheceu token TKMaiorIgual\n");*/
-                        return;
-                    }
-                    else
-                    {
-                        lex[posl]='\0';
-                        tk=TKMaior;
-                        /*printf("Reconheceu token TKMaior\n");*/
-                        return;
-                    }
+                    tk = TKMaiorOuIgual;
+                    printf("Token Selecionado %d\n", tk);
+                    return;
+                } else {
+                    lex[posl] = '\0';
+                    tk = TKMaior;
+                    printf("Token Selecionado %d\n", tk);
+                    return;
                 }
+            }
 
-                if (c=='<')
-                {
+            if (c == '<') {
+                proxC();
+
+                if (c == '<') {
+                    lex[posl++] = '<';
+                    lex[posl] = '\0';
                     proxC();
-
-                    if (c=='<')
-                    {
-                        lex[posl++]='<';
-                        lex[posl]='\0';
-                        proxC();
-                        tk=TKEsquerdaBitwise;
-                        /*printf("Reconheceu token TKBWLeftShift\n");*/
-                        return;
-                    }
-                    else if (c=='=')
-                    {
-                        lex[posl++]='=';
-                        lex[posl]='\0';
-                        proxC();
-                        tk=TKMenorOuIgual;
-                        /*printf("Reconheceu token TKMenorIgual\n");*/
-                        return;
-                    }
-                    else
-                    {
-                        lex[posl]='\0';
-                        tk=TKMenor;
-                        /*printf("Reconheceu token TKMenor\n");*/
-                        return;
-                    }
-                }
-
-                if (c=='!')
-                {
+                    tk = TKEsquerdaBitwise;
+                    printf("Token Selecionado %d\n", tk);
+                    return;
+                } else if (c == '=') {
+                    lex[posl++] = '=';
+                    lex[posl] = '\0';
                     proxC();
-                    if (c=='=')
-                    {
-                        lex[posl++]='=';
-                        lex[posl]='\0';
-                        proxC();
-                        tk=TKDiferente;
-                        /*printf("Reconheceu token TKDiferente\n");*/
-                        return;
-                    }
-                    else
-                    {
-                        lex[posl]='\0';
-                        //proxC();
-                        tk=TKNegacao;
-                        /*printf("Reconheceu token TKDiferente\n");*/
-                        return;
-                    }
+                    tk = TKMenorOuIgual;
+                    printf("Token Selecionado %d\n", tk);
+                    return;
+                } else {
+                    lex[posl] = '\0';
+                    tk = TKMenor;
+                    printf("Token Selecionado %d\n", tk);
+                    return;
                 }
+            }
 
-                if (c=='|')
-                {
+            if (c == '!') {
+                proxC();
+                if (c == '=') {
+                    lex[posl++] = '=';
+                    lex[posl] = '\0';
                     proxC();
-
-                    if (c=='|')
-                    {
-                        lex[posl++]='|';
-                        lex[posl]='\0';
-                        proxC();
-                        tk=TKOuLogico;
-                        /*printf("Reconheceu token TKDiferente\n");*/
-                        return;
-                    }
-                    else
-                    {
-                        lex[posl]='\0';
-                        proxC();
-                        tk=TKOuBitwise;/*printf("Reconheceu token TKBWOr\n");*/
-                        return;
-                    }
+                    tk = TKDiferente;
+                    printf("Token Selecionado %d\n", tk);
+                    return;
+                } else {
+                    lex[posl] = '\0';
+                    tk = TKNegacao;
+                    printf("Token Selecionado %d\n", tk);
+                    return;
                 }
+            }
 
-                if (c=='&')
-                {
+            if (c == '|') {
+                proxC();
+
+                if (c == '|') {
+                    lex[posl++] = '|';
+                    lex[posl] = '\0';
                     proxC();
-                    if (c=='&')
-                    {
-                        lex[posl++]='&';
-                        lex[posl]='\0';
-                        proxC();
-                        tk=TKELogico ;
-                        /*printf("Reconheceu token TKDiferente\n");*/
-                        return;
-                    }
-                    else
-                    {
-                        lex[posl]='\0';
-                        proxC();
-                        tk=TKEBitwise;/*printf("Reconheceu token TKBWAnd\n");*/
-                        return;
-                    }
+                    tk = TKOuLogico;
+                    printf("Token Selecionado %d\n", tk);
+                    return;
+                } else {
+                    lex[posl] = '\0';
+                    proxC();
+                    tk = TKOuBitwise;
+                    printf("Token Selecionado %d\n", tk);
+                    return;
                 }
+            }
 
-                if (c=='/'){lex[posl]='\0';proxC();tk=TKDivide;        return;}
-                if (c=='%'){lex[posl]='\0';proxC();tk=TKResto;       return;}
-                if (c=='^'){lex[posl]='\0';proxC();tk=TKXorBitwise;          return;}
-                if (c=='~'){lex[posl]='\0';proxC();tk=TKNaoBitwise;          return;}
-                if (c=='*'){lex[posl]='\0';proxC();tk=TKMultiplicacao;           return;}
-                if (c=='['){lex[posl]='\0';proxC();tk=TKAbreColchetes;   return;}
-                if (c==']'){lex[posl]='\0';proxC();tk=TKFechaColchetes;  return;}
-                if (c=='('){lex[posl]='\0';proxC();tk=TKAbreParenteses; return;}
-                if (c==')'){lex[posl]='\0';proxC();tk=TKFechaParenteses;return;}
-                if (c=='{'){lex[posl]='\0';proxC();tk=TKAbreChaves;     return;}
-                if (c=='}'){lex[posl]='\0';proxC();tk=TKFechaChaves;    return;}
-                if (c==','){lex[posl]='\0';proxC();tk=TKVirgula;        return;}
-                if (c==';'){lex[posl]='\0';proxC();tk=TKPontoEVirgula;  return;}
-                if (c=='.'){lex[posl]='\0';proxC();tk=TKPonto;          return;}
-                if (c==-1 ){lex[posl]='\0';proxC();tk=TKFimArquivo;     return;}
-                if (c==' ' || c=='\n' || c=='\t' || c=='\r') {proxC();posl--;colunaInicial = coluna;break;}
-                if (c=='\0') {tk=-1;return;}
+            if (c == '&') {
+                proxC();
+                if (c == '&') {
+                    lex[posl++] = '&';
+                    lex[posl] = '\0';
+                    proxC();
+                    tk = TKELogico;
+                    printf("Token Selecionado %d\n", tk);
+                    return;
+                } else {
+                    lex[posl] = '\0';
+                    proxC();
+                    tk = TKEBitwise;
+                    printf("Token Selecionado %d\n", tk);
+                    return;
+                }
+            }
 
-                printf("Erro lexico: encontrou o caracter %c (%d)",c,c);
-
-                while (c!='\n') proxC();
-                break;
-
-            case 1:
-                if (c>='a' && c<='z' || c>='A' && c<='Z' || c=='_' || c>='0' && c<='9') {proxC();break; }
-                lex[--posl]='\0';
-                //  printf("lexema atual: %s\n", lex);
-                tk=palavra_reservada(lex); //joga para fun��o palavra reservada para verificar se � uma ou n�o
+            if (c == '/') {
+                lex[posl] = '\0';
+                proxC();
+                tk = TKDivide;
+                printf("Token Selecionado %d\n", tk);
                 return;
-        } //switch
-    }// while
-}// funcao
+            }
+            if (c == '%') {
+                lex[posl] = '\0';
+                proxC();
+                tk = TKResto;
+                printf("Token Selecionado %d\n", tk);
+                return;
+            }
+            if (c == '^') {
+                lex[posl] = '\0';
+                proxC();
+                tk = TKXorBitwise;
+                printf("Token Selecionado %d\n", tk);
+                return;
+            }
+            if (c == '~') {
+                lex[posl] = '\0';
+                proxC();
+                tk = TKNaoBitwise;
+                printf("Token Selecionado %d\n", tk);
+                return;
+            }
+            if (c == '*') {
+                lex[posl] = '\0';
+                proxC();
+                tk = TKMultiplicacao;
+                printf("Token Selecionado %d\n", tk);
+                return;
+            }
+            if (c == '[') {
+                lex[posl] = '\0';
+                proxC();
+                tk = TKAbreColchetes;
+                printf("Token Selecionado %d\n", tk);
+                return;
+            }
+            if (c == ']') {
+                lex[posl] = '\0';
+                proxC();
+                tk = TKFechaColchetes;
+                printf("Token Selecionado %d\n", tk);
+                return;
+            }
+            if (c == '(') {
+                lex[posl] = '\0';
+                proxC();
+                tk = TKAbreParenteses;
+                printf("Token Selecionado %d\n", tk);
+                return;
+            }
+            if (c == ')') {
+                lex[posl] = '\0';
+                proxC();
+                tk = TKFechaParenteses;
+                printf("Token Selecionado %d\n", tk);
+                return;
+            }
+            if (c == '{') {
+                lex[posl] = '\0';
+                proxC();
+                tk = TKAbreChaves;
+                printf("Token Selecionado %d\n", tk);
+                return;
+            }
+            if (c == '}') {
+                lex[posl] = '\0';
+                proxC();
+                tk = TKFechaChaves;
+                printf("Token Selecionado %d\n", tk);
+                return;
+            }
+            if (c == ',') {
+                lex[posl] = '\0';
+                proxC();
+                tk = TKVirgula;
+                printf("Token Selecionado %d\n", tk);
+                return;
+            }
+            if (c == ';') {
+                lex[posl] = '\0';
+                proxC();
+                tk = TKPontoEVirgula;
+                printf("Token Selecionado %d\n", tk);
+                return;
+            }
+            if (c == '.') {
+                lex[posl] = '\0';
+                proxC();
+                tk = TKPonto;
+                printf("Token Selecionado %d\n", tk);
+                return;
+            }
+            if (c == -1) {
+                lex[posl] = '\0';
+                proxC();
+                tk = TKFimArquivo;
+                printf("Token Selecionado %d\n", tk);
+                return;
+            }
+            if (c == ' ' || c == '\n' || c == '\t' || c == '\r') {
+                proxC();
+                posl--;
+                colunaInicial = coluna;
+                break;
+            }
+            if (c == '\0') {
+                tk = -1;
+                printf("Token Selecionado %d\n", tk);
+                return;
+            }
 
-// Protótipo das Funções do Analisador Sintático
+            printf("Erro lexico: encontrou o caracter %c (%d)", c, c);
+
+            while (c != '\n') proxC();
+            break;
+
+        case 1:
+            if (c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z' || c == '_' || c >= '0' && c <= '9') {
+                proxC();
+                break;
+            }
+            lex[--posl] = '\0';
+            tk = palavra_reservada(lex); //joga para fun��o palavra reservada para verificar se � uma ou n�o
+            printf("Token Selecionado %d\n", tk);
+            return;
+        } //switch
+    } // while
+} // funcao
+
 int ProgramaC();
 
 int RestoProgramaC();
@@ -395,6 +511,8 @@ int DeclaracaoSpec1Linha();
 int Tipo();
 
 int InitDeclaracaoLista();
+
+int InitDeclaracaoLista1Hash();
 
 int InitDeclaracao();
 
@@ -412,6 +530,8 @@ int RestoDeclaracaoDireto3();
 
 int ListaParametro();
 
+int ListaParametro1Hash();
+
 int DeclaracaoParametro();
 
 int DeclaracaoParametro1Linha();
@@ -428,6 +548,8 @@ int Funcao1Linha();
 
 int ListaDeclaracao();
 
+int ListaDeclaracao1Hash();
+
 int ComandoComposto();
 
 int ComandoComposto2();
@@ -435,6 +557,8 @@ int ComandoComposto2();
 int ComandoComposto21Linha();
 
 int ListaComando();
+
+int ListaComando1Hash();
 
 int Comando();
 
@@ -520,1335 +644,1788 @@ int Expressao();
 
 int RestoExpressao();
 
-// <*********** INICIO DO ANALISADOR SINTÁTICO DESCENDENTE RECURSIVO SEM RETROCESSO ***********>
-
-//Implemente aqui a sua função getToken()
+// <*********** INICIO DO ANALISADOR SINT�TICO DESCENDENTE RECURSIVO SEM RETROCESSO ***********>
 
 //ProgramaC -> Funcao RestoProgramaC | Declaracao RestoProgramaC
-int ProgramaC(){
-    if (Funcao()){
-        if (RestoProgramaC()){
+int ProgramaC() {
+    printf("ENTROU ProgramaC \n");
+    if (Funcao()) {
+        if (RestoProgramaC()) {
             return 1;
-        }//fecha22
-        else{return 0;}
-    }//fecha22
-    else 	if (Declaracao()){
-        if (RestoProgramaC()){
+        } else {
+            return 0;
+        }
+    } else if (Declaracao()) {
+        if (RestoProgramaC()) {
             return 1;
-        }//fecha22
-        else{return 0;}
-    }//fecha22
-    else{return 0;}
-}//fecha25
+        } else {
+            return 0;
+        }
+    } else {
+        return 0;
+    }
+}
 
 //RestoProgramaC -> Funcao RestoProgramaC | Declaracao RestoProgramaC | ?
-int RestoProgramaC(){
-    if (Funcao()){
-        if (RestoProgramaC()){
+int RestoProgramaC() {
+    printf("ENTROU RestoProgramaC \n");
+    if (Funcao()) {
+        if (RestoProgramaC()) {
             return 1;
-        }//fecha22
-        else{return 0;}
-    }//fecha22
-    else 	if (Declaracao()){
-        if (RestoProgramaC()){
+        } else {
+            return 0;
+        }
+    } else if (Declaracao()) {
+        if (RestoProgramaC()) {
             return 1;
-        }//fecha22
-        else{return 0;}
-    }//fecha22
-    else {return 1;}
-}//fecha25
+        } else {
+            return 0;
+        }
+    } else {
+        return 1;
+    }
+}
 
 //Declaracao -> DeclaracaoSpec Declaracao1Linha | DeclaracaoDireto
-int Declaracao(){
-    if (DeclaracaoSpec()){
-        if (Declaracao1Linha()){
+int Declaracao() {
+    printf("ENTROU Declaracao \n");
+    if (DeclaracaoSpec()) {
+        if (Declaracao1Linha()) {
             return 1;
-        }//fecha22
-        else{return 0;}
-    }//fecha22
-    else if (DeclaracaoDireto()){
+        } else {
+            return 0;
+        }
+    } else if (DeclaracaoDireto()) {
         return 1;
-    }//fecha21
-    else{return 0;}
-}//fecha25
+    } else {
+        return 0;
+    }
+}
 
 //Declaracao1Linha -> ; | InitDeclaracaoLista ;
-int Declaracao1Linha(){
-    if(tk == TKPontoEVirgula){// ;
+int Declaracao1Linha() {
+    printf("ENTROU Declaracao1Linha \n");
+    if (tk == TKPontoEVirgula) { // ;
+        printf("CONSUMIU TOKEN ;\n");
         getToken();
         return 1;
-    }//fecha23
-    else 	if (InitDeclaracaoLista()){
-        if(tk == TKPontoEVirgula){// ;
+    } else if (InitDeclaracaoLista()) {
+        if (tk == TKPontoEVirgula) { // ;
+            printf("CONSUMIU TOKEN ;\n");
             getToken();
             return 1;
-        }//fecha24
-        else{return 0;}
-    }//fecha24
-    else{return 0;}
-}//fecha25
+        }
+        else {
+            printf("Erro, esperava token ';'\n");
+            printf("ERRO NA FUNCAO 'Declaracao1Linha'\n");
+            return 0;
+        }
+    }
+    else {
+        printf("Erro, esperava token ';'\n");
+        printf("ERRO NA FUNCAO 'Declaracao1Linha'\n");
+        return 0;
+    }
+}
 
 //DeclaracaoSpec -> Tipo DeclaracaoSpec1Linha
-int DeclaracaoSpec(){
-    if (Tipo()){
-        if (DeclaracaoSpec1Linha()){
-            return 1;
-        }//fecha22
-        else{return 0;}
-    }//fecha22
-    else{return 0;}
-}//fecha25
-
-//DeclaracaoSpec1Linha -> DeclaracaoSpec | ?
-int DeclaracaoSpec1Linha(){
-    if (DeclaracaoSpec()){
+int DeclaracaoSpec() {
+    printf("ENTROU DeclaracaoSpec \n");
+    if (Tipo()) {
         return 1;
-    }//fecha21
-    else {return 1;}
-}//fecha25
+    } else {
+        return 0;
+    }
+}
 
 //Tipo -> void | char | short | int | long | float | double | unsigned
-int Tipo(){
-    if(tk == TKVoid){// void
+int Tipo() {
+    printf("ENTROU Tipo \n");
+    if (tk == TKVoid) { // void
+        printf("CONSUMIU TOKEN void\n");
         getToken();
         return 1;
-    }//fecha23
-    else if(tk == TKChar){// char
+    } else if (tk == TKChar) { // char
+        printf("CONSUMIU TOKEN char\n");
         getToken();
         return 1;
-    }//fecha23
-    else if(tk == TKShort){// short
+    } else if (tk == TKShort) { // short
+        printf("CONSUMIU TOKEN short\n");
         getToken();
         return 1;
-    }//fecha23
-    else if(tk == TKInt){// int
+    } else if (tk == TKInt) { // int
+        printf("CONSUMIU TOKEN int\n");
         getToken();
         return 1;
-    }//fecha23
-    else if(tk == TKLong){// long
+    } else if (tk == TKLong) { // long
+        printf("CONSUMIU TOKEN long\n");
         getToken();
         return 1;
-    }//fecha23
-    else if(tk == TKFloat){// float
+    } else if (tk == TKFloat) { // float
+        printf("CONSUMIU TOKEN float\n");
         getToken();
         return 1;
-    }//fecha23
-    else if(tk == TKDouble){// double
+    } else if (tk == TKDouble) { // double
+        printf("CONSUMIU TOKEN double\n");
         getToken();
         return 1;
-    }//fecha23
-    else if(tk == TKUnsigned){// unsigned
+    } else if (tk == TKUnsigned) { // unsigned
+        printf("CONSUMIU TOKEN unsigned\n");
         getToken();
         return 1;
-    }//fecha23
-    else{return 0;}
-}//fecha25
+    } else {
+        printf("Erro, esperava token de inicializacao (void, char, short, int, long, float, double, unsigned...\n");
+        printf("ERRO NA FUNCAO 'TIPO'\n");
+        return 0;
+    }
+}
 
-//InitDeclaracaoLista -> InitDeclaracao | InitDeclaracaoLista , InitDeclaracao
-int InitDeclaracaoLista(){
-    if (InitDeclaracao()){
-        return 1;
-    }//fecha21
-    else 	if (InitDeclaracaoLista()){
-        if(tk == TKVirgula){// ,
-            getToken();
-            if (InitDeclaracao()){
+//InitDeclaracaoLista -> InitDeclaracao InitDeclaracaoLista1Hash
+int InitDeclaracaoLista() {
+    printf("ENTROU InitDeclaracaoLista \n");
+    if (InitDeclaracao()) {
+        if (InitDeclaracaoLista1Hash()) {
+            return 1;
+        } else {
+            return 0;
+        }
+    } else {
+        return 0;
+    }
+}
+
+//InitDeclaracaoLista1Hash -> , InitDeclaracao InitDeclaracaoLista1Hash | ?
+int InitDeclaracaoLista1Hash() {
+    printf("ENTROU InitDeclaracaoLista1Hash \n");
+    if (tk == TKVirgula) { // ,
+        printf("CONSUMIU TOKEN ,\n");
+        getToken();
+        if (InitDeclaracao()) {
+            if (InitDeclaracaoLista1Hash()) {
                 return 1;
-            }//fecha22
-            else{return 0;}
-        }//fecha22
-        else{return 0;}
-    }//fecha22
-    else{return 0;}
-}//fecha25
+            } else {
+                return 0;
+            }
+        } else {
+            return 0;
+        }
+    } else {
+        printf("WARNING NA FUNCAO InitDeclaracaoLista1Hash esperava ',' e derivou vazio\n");
+        return 1;
+    }
+}
 
 //InitDeclaracao -> Declaracao InitDeclaracao1Linha
-int InitDeclaracao(){
-    if (Declaracao()){
-        if (InitDeclaracao1Linha()){
+int InitDeclaracao() {
+    printf("ENTROU InitDeclaracao \n");
+    if (Declaracao()) {
+        if (InitDeclaracao1Linha()) {
             return 1;
-        }//fecha22
-        else{return 0;}
-    }//fecha22
-    else{return 0;}
-}//fecha25
+        } else {
+            return 0;
+        }
+    } else {
+        return 0;
+    }
+}
 
 //InitDeclaracao1Linha -> = Init | ?
-int InitDeclaracao1Linha(){
-    if(tk == TKAtribuicao){// =
+int InitDeclaracao1Linha() {
+    printf("ENTROU InitDeclaracao1Linha \n");
+    if (tk == TKAtribuicao) { // =
+        printf("CONSUMIU TOKEN =\n");
         getToken();
-        if (Init()){
+        if (Init()) {
             return 1;
-        }//fecha22
-        else{return 0;}
-    }//fecha22
-    else {return 1;}
-}//fecha25
+        } else {
+            return 0;
+        }
+    } else {
+        printf("WARNING NA FUNCAO InitDeclaracao1Linha esperava '=' e derivou vazio\n");
+        return 1;
+    }
+}
 
 //Pointer -> * Pointer | ?
-int Pointer(){
-    if(tk == TKMultiplicacao){// *
+int Pointer() {
+    printf("ENTROU Pointer \n");
+    if (tk == TKMultiplicacao) { // *
+        printf("CONSUMIU TOKEN *\n");
         getToken();
-        if (Pointer()){
+        if (Pointer()) {
             return 1;
-        }//fecha22
-        else{return 0;}
-    }//fecha22
-    else {return 1;}
-}//fecha25
+        } else {
+            return 0;
+        }
+    } else {
+        printf("WARNING NA FUNCAO Pointer esperava '*' e derivou vazio\n");
+        return 1;
+    }
+}
 
 //DeclaracaoDireto -> id RestoDeclaracaoDireto | ( Declaracao ) RestoDeclaracaoDireto
-int DeclaracaoDireto(){
-    if(tk == TKId){// id
+int DeclaracaoDireto() {
+    printf("ENTROU DeclaracaoDireto \n");
+    if (tk == TKId) { // id
+        printf("CONSUMIU TOKEN id\n");
         getToken();
-        if (RestoDeclaracaoDireto()){
+        if (RestoDeclaracaoDireto()) {
             return 1;
-        }//fecha22
-        else{return 0;}
-    }//fecha22
-    else if(tk == TKAbreParenteses){// (
+        } else {
+            return 0;
+        }
+    } else if (tk == TKAbreParenteses) { // (
+        printf("CONSUMIU TOKEN (\n");
         getToken();
-        if (Declaracao()){
-            if(tk == TKFechaParenteses){// )
+        if (Declaracao()) {
+            if (tk == TKFechaParenteses) { // )
+                printf("CONSUMIU TOKEN )\n");
                 getToken();
-                if (RestoDeclaracaoDireto()){
+                if (RestoDeclaracaoDireto()) {
                     return 1;
-                }//fecha22
-                else{return 0;}
-            }//fecha22
-            else{return 0;}
-        }//fecha22
-        else{return 0;}
-    }//fecha22
-    else{return 0;}
-}//fecha25
+                } else {
+                    return 0;
+                }
+            } else {
+                printf("ERRO NA FUNCAO 'DeclaracaoDireto'\n");
+                printf("Erro, esperava token ')'\n");
+                return 0;
+            }
+        } else {
+            return 0;
+        }
+    } else {
+        printf("ERRO NA FUNCAO 'DeclaracaoDireto'\n");
+        printf("Erro, esperava token 'TKId ou ('\n");
+        return 0;
+    }
+}
 
 //RestoDeclaracaoDireto -> [ RestoDeclaracaoDireto2 | ( RestoDeclaracaoDireto3
-int RestoDeclaracaoDireto(){
-    if(tk == TKAbreColchetes){// [
+int RestoDeclaracaoDireto() {
+    printf("ENTROU RestoDeclaracaoDireto \n");
+    if (tk == TKAbreColchetes) { // [
+        printf("CONSUMIU TOKEN [\n");
         getToken();
-        if (RestoDeclaracaoDireto2()){
+        if (RestoDeclaracaoDireto2()) {
             return 1;
-        }//fecha22
-        else{return 0;}
-    }//fecha22
-    else if(tk == TKAbreParenteses){// (
+        } else {
+            return 0;
+        }
+    } else if (tk == TKAbreParenteses) { // (
+        printf("CONSUMIU TOKEN (\n");
         getToken();
-        if (RestoDeclaracaoDireto3()){
+        if (RestoDeclaracaoDireto3()) {
             return 1;
-        }//fecha22
-        else{return 0;}
-    }//fecha22
-    else{return 0;}
-}//fecha25
+        } else {
+            return 0;
+        }
+    } else if (tk == TKPontoEVirgula) { // ;
+        printf("CONSUMIU TOKEN ;\n");
+        getToken();
+        return 1;
+    }
+	else {
+        printf("ERRO NA FUNCAO 'RestoDeclaracaoDireto'\n");
+        printf("Erro, esperava token '[ ou ('\n");
+        return 0;
+    }
+}
 
 //RestoDeclaracaoDireto2 -> ExpressaoOr ] RestoDeclaracaoDireto | ] RestoDeclaracaoDireto
-int RestoDeclaracaoDireto2(){
-    if (ExpressaoOr()){
-        if(tk == TKFechaColchetes){// ]
+int RestoDeclaracaoDireto2() {
+    printf("ENTROU RestoDeclaracaoDireto2 \n");
+    if (ExpressaoOr()) {
+        if (tk == TKFechaColchetes) { // ]
+            printf("CONSUMIU TOKEN ]\n");
             getToken();
-            if (RestoDeclaracaoDireto()){
+            if (RestoDeclaracaoDireto()) {
                 return 1;
-            }//fecha22
-            else{return 0;}
-        }//fecha22
-        else{return 0;}
-    }//fecha22
-    else if(tk == TKFechaColchetes){// ]
+            } else {
+                return 0;
+            }
+        } else {
+            printf("ERRO NA FUNCAO 'RestoDeclaracaoDireto2'\n");
+            printf("Erro, esperava token ']'\n");
+            return 0;
+        }
+    } else if (tk == TKFechaColchetes) { // ]
+        printf("CONSUMIU TOKEN ]\n");
         getToken();
-        if (RestoDeclaracaoDireto()){
+        if (RestoDeclaracaoDireto()) {
             return 1;
-        }//fecha22
-        else{return 0;}
-    }//fecha22
-    else{return 0;}
-}//fecha25
+        } else {
+            return 0;
+        }
+    } else {
+        printf("ERRO NA FUNCAO 'RestoDeclaracaoDireto2'\n");
+        printf("Erro, esperava token ']'\n");
+        return 0;
+    }
+}
 
 //RestoDeclaracaoDireto3 -> ListaParametro ) RestoDeclaracaoDireto | ListaIdentificadores ) RestoDeclaracaoDireto | ) RestoDeclaracaoDireto
-int RestoDeclaracaoDireto3(){
-    if (ListaParametro()){
-        if(tk == TKFechaParenteses){// )
+int RestoDeclaracaoDireto3() {
+    printf("ENTROU RestoDeclaracaoDireto3 \n");
+    if (ListaParametro()) {
+        if (tk == TKFechaParenteses) { // )
+            printf("CONSUMIU TOKEN )\n");
             getToken();
-            if (RestoDeclaracaoDireto()){
+            if (RestoDeclaracaoDireto()) {
                 return 1;
-            }//fecha22
-            else{return 0;}
-        }//fecha22
-        else{return 0;}
-    }//fecha22
-    else 	if (ListaIdentificadores()){
-        if(tk == TKFechaParenteses){// )
+            } else {
+                return 0;
+            }
+        } else {
+            printf("ERRO NA FUNCAO 'RestoDeclaracaoDireto3'\n");
+            printf("Erro, esperava token ')'\n");
+            return 0;
+        }
+    } else if (ListaIdentificadores()) {
+        if (tk == TKFechaParenteses) { // )
+            printf("CONSUMIU TOKEN )\n");
             getToken();
-            if (RestoDeclaracaoDireto()){
+            if (RestoDeclaracaoDireto()) {
                 return 1;
-            }//fecha22
-            else{return 0;}
-        }//fecha22
-        else{return 0;}
-    }//fecha22
-    else if(tk == TKFechaParenteses){// )
+            } else {
+                return 0;
+            }
+        } else {
+            printf("ERRO NA FUNCAO 'RestoDeclaracaoDireto3'\n");
+            printf("Erro, esperava token ')'\n");
+            return 0;
+        }
+    } else if (tk == TKFechaParenteses) { // )
+        printf("CONSUMIU TOKEN )\n");
         getToken();
-        if (RestoDeclaracaoDireto()){
-            return 1;
-        }//fecha22
-        else{return 0;}
-    }//fecha22
-    else{return 0;}
-}//fecha25
-
-//ListaParametro -> DeclaracaoParametro | ListaParametro , DeclaracaoParametro
-int ListaParametro(){
-    if (DeclaracaoParametro()){
         return 1;
-    }//fecha21
-    else 	if (ListaParametro()){
-        if(tk == TKVirgula){// ,
-            getToken();
-            if (DeclaracaoParametro()){
+    } else {
+        printf("ERRO NA FUNCAO 'RestoDeclaracaoDireto3'\n");
+        printf("Erro, esperava token ')'\n");
+        return 0;
+    }
+}
+
+//ListaParametro -> DeclaracaoParametro ListaParametro1Hash
+int ListaParametro() {
+    printf("ENTROU ListaParametro \n");
+    if (DeclaracaoParametro()) {
+        if (ListaParametro1Hash()) {
+            return 1;
+        } else {
+            return 0;
+        }
+    } else {
+        return 0;
+    }
+}
+
+//ListaParametro1Hash -> , DeclaracaoParametro ListaParametro1Hash | ?
+int ListaParametro1Hash() {
+    printf("ENTROU ListaParametro1Hash \n");
+    if (tk == TKVirgula) { // ,
+        printf("CONSUMIU TOKEN ,\n");
+        getToken();
+        if (DeclaracaoParametro()) {
+            if (ListaParametro1Hash()) {
                 return 1;
-            }//fecha22
-            else{return 0;}
-        }//fecha22
-        else{return 0;}
-    }//fecha22
-    else{return 0;}
-}//fecha25
+            } else {
+                return 0;
+            }
+        } else {
+            return 0;
+        }
+    } else {
+        printf("WARNING NA FUNCAO ListaParametro1Hash esperava ',' e derivou vazio\n");
+        return 1;
+    }
+}
 
 //DeclaracaoParametro -> DeclaracaoSpec DeclaracaoParametro1Linha
-int DeclaracaoParametro(){
-    if (DeclaracaoSpec()){
-        if (DeclaracaoParametro1Linha()){
+int DeclaracaoParametro() {
+    printf("ENTROU DeclaracaoParametro \n");
+    if (DeclaracaoSpec()) {
+        if (DeclaracaoParametro1Linha()) {
             return 1;
-        }//fecha22
-        else{return 0;}
-    }//fecha22
-    else{return 0;}
-}//fecha25
+        } else {
+            return 0;
+        }
+    } else {
+        return 0;
+    }
+}
 
 //DeclaracaoParametro1Linha -> Declaracao | ?
-int DeclaracaoParametro1Linha(){
-    if (Declaracao()){
+int DeclaracaoParametro1Linha() {
+    printf("ENTROU DeclaracaoParametro1Linha \n");
+    if (Declaracao()) {
         return 1;
-    }//fecha21
-    else {return 1;}
-}//fecha25
+    } else {
+        return 1;
+    }
+}
 
 //ListaIdentificadores -> id RestoListaIdentificadores
-int ListaIdentificadores(){
-    if(tk == TKId){// id
+int ListaIdentificadores() {
+    printf("ENTROU ListaIdentificadores \n");
+    if (tk == TKId) { // id
+        printf("CONSUMIU TOKEN id\n");
         getToken();
-        if (RestoListaIdentificadores()){
+        if (RestoListaIdentificadores()) {
             return 1;
-        }//fecha22
-        else{return 0;}
-    }//fecha22
-    else{return 0;}
-}//fecha25
+        } else {
+            return 0;
+        }
+    } else {
+        printf("ERRO NA FUNCAO 'ListaIdentificadores'\n");
+        printf("Erro, esperava token 'TKid'\n");
+        return 0;
+    }
+}
 
 //RestoListaIdentificadores -> , id RestoListaIdentificadores | ?
-int RestoListaIdentificadores(){
-    if(tk == TKVirgula){// ,
+int RestoListaIdentificadores() {
+    printf("ENTROU RestoListaIdentificadores \n");
+    if (tk == TKVirgula) { // ,
+        printf("CONSUMIU TOKEN ,\n");
         getToken();
-        if(tk == TKId){// id
+        if (tk == TKId) { // id
+            printf("CONSUMIU TOKEN id\n");
             getToken();
-            if (RestoListaIdentificadores()){
+            if (RestoListaIdentificadores()) {
                 return 1;
-            }//fecha22
-            else{return 0;}
-        }//fecha22
-        else{return 0;}
-    }//fecha22
-    else {return 1;}
-}//fecha25
+            } else {
+                printf("ERRO NA FUNCAO 'RestoListaIdentificadores'\n");
+                printf("Erro, esperava token 'TKid'\n");
+                return 0;
+            }
+        } else {
+            return 0;
+        }
+    } else {
+        printf("WARNING NA FUNCAO RestoListaIdentificadores esperava ',' e derivou vazio\n");
+        return 1;
+    }
+}
 
 //Funcao -> DeclaracaoSpec Declaracao Funcao1Linha | Declaracao Funcao2Linha
-int Funcao(){
-    if (DeclaracaoSpec()){
-        if (Declaracao()){
-            if (Funcao1Linha()){
+int Funcao() {
+    printf("ENTROU Funcao \n");
+    if (DeclaracaoSpec()) {
+        if (Declaracao()) {
+            if (Funcao1Linha()) {
                 return 1;
-            }//fecha22
-            else{return 0;}
-        }//fecha22
-        else{return 0;}
-    }//fecha22
-    else 	if (Declaracao()){
-        if (Funcao2Linha()){
+            } else {
+                return 0;
+            }
+        } else {
+            return 0;
+        }
+    } else if (Declaracao()) {
+        if (Funcao2Linha()) {
             return 1;
-        }//fecha22
-        else{return 0;}
-    }//fecha22
-    else{return 0;}
-}//fecha25
+        } else {
+            return 0;
+        }
+    } else {
+        return 0;
+    }
+}
 
 //Funcao2Linha -> ListaDeclaracao ComandoComposto | ComandoComposto
-int Funcao2Linha(){
-    if (ListaDeclaracao()){
-        if (ComandoComposto()){
+int Funcao2Linha() {
+    printf("ENTROU Funcao2Linha \n");
+    if (ListaDeclaracao()) {
+        if (ComandoComposto()) {
             return 1;
-        }//fecha22
-        else{return 0;}
-    }//fecha22
-    else if (ComandoComposto()){
+        } else {
+            return 0;
+        }
+    } else if (ComandoComposto()) {
         return 1;
-    }//fecha21
-    else{return 0;}
-}//fecha25
+    } else {
+        return 0;
+    }
+}
 
 //Funcao1Linha -> ListaDeclaracao ComandoComposto | ComandoComposto
-int Funcao1Linha(){
-    if (ListaDeclaracao()){
-        if (ComandoComposto()){
+int Funcao1Linha() {
+    printf("ENTROU Funcao1Linha \n");
+    if (ListaDeclaracao()) {
+        if (ComandoComposto()) {
             return 1;
-        }//fecha22
-        else{return 0;}
-    }//fecha22
-    else if (ComandoComposto()){
+        } else {
+            return 0;
+        }
+    } else if (ComandoComposto()) {
         return 1;
-    }//fecha21
-    else{return 0;}
-}//fecha25
+    } else {
+        return 0;
+    }
+}
 
-//ListaDeclaracao -> Declaracao | ListaDeclaracao Declaracao
-int ListaDeclaracao(){
-    if (Declaracao()){
-        return 1;
-    }//fecha21
-    else 	if (ListaDeclaracao()){
-        if (Declaracao()){
+//ListaDeclaracao -> Declaracao ListaDeclaracao1Hash
+int ListaDeclaracao() {
+    printf("ENTROU ListaDeclaracao \n");
+    if (Declaracao()) {
+        if (ListaDeclaracao1Hash()) {
             return 1;
-        }//fecha22
-        else{return 0;}
-    }//fecha22
-    else{return 0;}
-}//fecha25
+        } else {
+            return 0;
+        }
+    } else {
+        return 0;
+    }
+}
+
+//ListaDeclaracao1Hash -> Declaracao ListaDeclaracao1Hash | ?
+int ListaDeclaracao1Hash() {
+    printf("ENTROU ListaDeclaracao1Hash \n");
+    if (Declaracao()) {
+        if (ListaDeclaracao1Hash()) {
+            return 1;
+        } else {
+            return 0;
+        }
+    } else {
+        return 1;
+    }
+}
 
 //ComandoComposto -> { ComandoComposto2
-int ComandoComposto(){
-    if(tk == TKAbreChaves){// {
+int ComandoComposto() {
+    printf("ENTROU ComandoComposto \n");
+    if (tk == TKAbreChaves) { // {
+        printf("CONSUMIU TOKEN {\n");
         getToken();
-        if (ComandoComposto2()){
+        if (ComandoComposto2()) {
             return 1;
-        }//fecha22
-        else{return 0;}
-    }//fecha22
-    else{return 0;}
-}//fecha25
+        } else {
+            return 0;
+        }
+    } else {
+        printf("ERRO NA FUNCAO 'ComandoComposto'\n");
+        printf("Erro, esperava token '{'\n");
+        return 0;
+    }
+}
 
 //ComandoComposto2 -> } | ListaComando } | ListaDeclaracao ComandoComposto21Linha
-int ComandoComposto2(){
-    if(tk == TKFechaChaves){// }
+int ComandoComposto2() {
+    printf("ENTROU ComandoComposto2 \n");
+    if (tk == TKFechaChaves) { // }
+        printf("CONSUMIU TOKEN }\n");
         getToken();
         return 1;
-    }//fecha23
-    else 	if (ListaComando()){
-        if(tk == TKFechaChaves){// }
+    } else if (ListaComando()) {
+        if (tk == TKFechaChaves) { // }
+            printf("CONSUMIU TOKEN }\n");
             getToken();
             return 1;
-        }//fecha24
-        else{return 0;}
-    }//fecha24
-    else 	if (ListaDeclaracao()){
-        if (ComandoComposto21Linha()){
+        }
+        else {
+            printf("ERRO NA FUNCAO 'ComandoComposto2'\n");
+            printf("Erro, esperava token '}'\n");
+            return 0;
+        }
+    }
+    else if (ListaDeclaracao()) {
+        if (ComandoComposto21Linha()) {
             return 1;
-        }//fecha22
-        else{return 0;}
-    }//fecha22
-    else{return 0;}
-}//fecha25
+        } else {
+            return 0;
+        }
+    } else {
+        printf("ERRO NA FUNCAO 'ComandoComposto2'\n");
+        printf("Erro, esperava token '}'\n");
+        return 0;
+    }
+}
 
 //ComandoComposto21Linha -> } | ListaComando }
-int ComandoComposto21Linha(){
-    if(tk == TKFechaChaves){// }
+int ComandoComposto21Linha() {
+    printf("ENTROU ComandoComposto21Linha \n");
+    if (tk == TKFechaChaves) { // }
+        printf("CONSUMIU TOKEN }\n");
         getToken();
         return 1;
-    }//fecha23
-    else 	if (ListaComando()){
-        if(tk == TKFechaChaves){// }
+    } else if (ListaComando()) {
+        if (tk == TKFechaChaves) { // }
+            printf("CONSUMIU TOKEN }\n");
             getToken();
             return 1;
-        }//fecha24
-        else{return 0;}
-    }//fecha24
-    else{return 0;}
-}//fecha25
+        }
+        else {
+            printf("ERRO NA FUNCAO 'ComandoComposto21Linha'\n");
+            printf("Erro, esperava token '}'\n");
+            return 0;
+        }
+    }
+    else {
+        printf("ERRO NA FUNCAO 'ComandoComposto21Linha'\n");
+        printf("Erro, esperava token '}'\n");
+        return 0;
+    }
+}
 
-//ListaComando -> Comando | ListaComando Comando
-int ListaComando(){
-    if (Comando()){
-        return 1;
-    }//fecha21
-    else 	if (ListaComando()){
-        if (Comando()){
+//ListaComando -> Comando ListaComando1Hash
+int ListaComando() {
+    printf("ENTROU ListaComando \n");
+    if (Comando()) {
+        if (ListaComando1Hash()) {
             return 1;
-        }//fecha22
-        else{return 0;}
-    }//fecha22
-    else{return 0;}
-}//fecha25
+        } else {
+            return 0;
+        }
+    } else {
+        return 0;
+    }
+}
+
+//ListaComando1Hash -> Comando ListaComando1Hash | ?
+int ListaComando1Hash() {
+    printf("ENTROU ListaComando1Hash \n");
+    if (Comando()) {
+        if (ListaComando1Hash()) {
+            return 1;
+        } else {
+            return 0;
+        }
+    } else {
+        return 1;
+    }
+}
 
 //Comando -> ComandoComposto | ComandoExpressao | ComandoSelecao | ComandoIterativo
-int Comando(){
-    if (ComandoComposto()){
+int Comando() {
+    printf("ENTROU Comando \n");
+    if (ComandoComposto()) {
         return 1;
-    }//fecha21
-    else if (ComandoExpressao()){
+    } else if (ComandoExpressao()) {
         return 1;
-    }//fecha21
-    else if (ComandoSelecao()){
+    } else if (ComandoSelecao()) {
         return 1;
-    }//fecha21
-    else if (ComandoIterativo()){
+    } else if (ComandoIterativo()) {
         return 1;
-    }//fecha21
-    else{return 0;}
-}//fecha25
+    } else {
+        return 0;
+    }
+}
 
 //ComandoExpressao -> ; | Expressao ;
-int ComandoExpressao(){
-    if(tk == TKPontoEVirgula){// ;
+int ComandoExpressao() {
+    printf("ENTROU ComandoExpressao \n");
+    if (tk == TKPontoEVirgula) { // ;
+        printf("CONSUMIU TOKEN ;\n");
         getToken();
         return 1;
-    }//fecha23
-    else 	if (Expressao()){
-        if(tk == TKPontoEVirgula){// ;
+    } else if (Expressao()) {
+        if (tk == TKPontoEVirgula) { // ;
+            printf("CONSUMIU TOKEN ;\n");
             getToken();
             return 1;
-        }//fecha24
-        else{return 0;}
-    }//fecha24
-    else{return 0;}
-}//fecha25
+        }
+        else {
+            printf("ERRO NA FUNCAO 'ComandoExpressao'\n");
+            printf("Erro, esperava token ';'\n");
+            return 0;
+        }
+    }
+    else {
+        printf("ERRO NA FUNCAO 'ComandoExpressao'\n");
+        printf("Erro, esperava token ';'\n");
+        return 0;
+    }
+}
 
 //ComandoSelecao -> if ( Expressao ) Comando ComandoSelecao1Linha
-int ComandoSelecao(){
-    if(tk == TKIf){// if
+int ComandoSelecao() {
+    printf("ENTROU ComandoSelecao \n");
+    if (tk == TKIf) { // if
+        printf("CONSUMIU TOKEN if\n");
         getToken();
-        if(tk == TKAbreParenteses){// (
+        if (tk == TKAbreParenteses) { // (
+            printf("CONSUMIU TOKEN (\n");
             getToken();
-            if (Expressao()){
-                if(tk == TKFechaParenteses){// )
+            if (Expressao()) {
+                if (tk == TKFechaParenteses) { // )
+                    printf("CONSUMIU TOKEN )\n");
                     getToken();
-                    if (Comando()){
-                        if (ComandoSelecao1Linha()){
+                    if (Comando()) {
+                        if (ComandoSelecao1Linha()) {
                             return 1;
-                        }//fecha22
-                        else{return 0;}
-                    }//fecha22
-                    else{return 0;}
-                }//fecha22
-                else{return 0;}
-            }//fecha22
-            else{return 0;}
-        }//fecha22
-        else{return 0;}
-    }//fecha22
-    else{return 0;}
-}//fecha25
+                        } else {
+                            return 0;
+                        }
+                    } else {
+                        return 0;
+                    }
+                } else {
+                    printf("ERRO NA FUNCAO 'ComandoSelecao'\n");
+                    printf("Erro, esperava token ')'\n");
+                    return 0;
+                }
+            } else {
+                return 0;
+            }
+        } else {
+            printf("ERRO NA FUNCAO 'ComandoSelecao'\n");
+            printf("Erro, esperava token '('\n");
+            return 0;
+        }
+    } else {
+        printf("ERRO NA FUNCAO 'ComandoSelecao'\n");
+        printf("Erro, esperava token 'TKif'\n");
+        return 0;
+    }
+}
 
 //ComandoSelecao1Linha -> else Comando | ?
-int ComandoSelecao1Linha(){
-    if(tk == TKElse){// else
+int ComandoSelecao1Linha() {
+    printf("ENTROU ComandoSelecao1Linha \n");
+    if (tk == TKElse) { // else
+        printf("CONSUMIU TOKEN else\n");
         getToken();
-        if (Comando()){
+        if (Comando()) {
             return 1;
-        }//fecha22
-        else{return 0;}
-    }//fecha22
-    else {return 1;}
-}//fecha25
+        } else {
+            return 0;
+        }
+    } else {
+        printf("WARNING NA FUNCAO ComandoSelecao1Linha esperava 'else' e derivou vazio\n");
+        return 1;
+    }
+}
 
 //ComandoIterativo -> while ( Expressao ) Comando | do Comando while ( Expressao ) ; | for ( ComandoExpressao ComandoExpressao ComandoIterativo1Linha
-int ComandoIterativo(){
-    if(tk == TKWhile){// while
+int ComandoIterativo() {
+    printf("ENTROU ComandoIterativo \n");
+    if (tk == TKWhile) { // while
+        printf("CONSUMIU TOKEN while\n");
         getToken();
-        if(tk == TKAbreParenteses){// (
+        if (tk == TKAbreParenteses) { // (
+            printf("CONSUMIU TOKEN (\n");
             getToken();
-            if (Expressao()){
-                if(tk == TKFechaParenteses){// )
+            if (Expressao()) {
+                if (tk == TKFechaParenteses) { // )
+                    printf("CONSUMIU TOKEN )\n");
                     getToken();
-                    if (Comando()){
+                    if (Comando()) {
                         return 1;
-                    }//fecha22
-                    else{return 0;}
-                }//fecha22
-                else{return 0;}
-            }//fecha22
-            else{return 0;}
-        }//fecha22
-        else{return 0;}
-    }//fecha22
-    else if(tk == TKDo){// do
+                    } else {
+                        return 0;
+                    }
+                } else {
+                    printf("ERRO NA FUNCAO 'ComandoIterativo'\n");
+                    printf("Erro, esperava token ')'\n");
+                    return 0;
+                }
+            } else {
+                return 0;
+            }
+        } else {
+            printf("ERRO NA FUNCAO 'ComandoIterativo'\n");
+            printf("Erro, esperava token ')'\n");
+            return 0;
+        }
+    } else if (tk == TKDo) { // do
+        printf("CONSUMIU TOKEN do\n");
         getToken();
-        if (Comando()){
-            if(tk == TKWhile){// while
+        if (Comando()) {
+            if (tk == TKWhile) { // while
+                printf("CONSUMIU TOKEN while\n");
                 getToken();
-                if(tk == TKAbreParenteses){// (
+                if (tk == TKAbreParenteses) { // (
+                    printf("CONSUMIU TOKEN (\n");
                     getToken();
-                    if (Expressao()){
-                        if(tk == TKFechaParenteses){// )
+                    if (Expressao()) {
+                        if (tk == TKFechaParenteses) { // )
+                            printf("CONSUMIU TOKEN )\n");
                             getToken();
-                            if(tk == TKPontoEVirgula){// ;
+                            if (tk == TKPontoEVirgula) { // ;
+                                printf("CONSUMIU TOKEN ;\n");
                                 getToken();
                                 return 1;
-                            }//fecha24
-                            else{return 0;}
-                        }//fecha24
-                        else{return 0;}
-                    }//fecha24
-                    else{return 0;}
-                }//fecha24
-                else{return 0;}
-            }//fecha24
-            else{return 0;}
-        }//fecha24
-        else{return 0;}
-    }//fecha24
-    else if(tk == TKFor){// for
+                            }
+                            else {
+                                printf("ERRO NA FUNCAO 'ComandoIterativo'\n");
+                                printf("Erro, esperava token ';'\n");
+                                return 0;
+                            }
+                        }
+                        else {
+                            printf("ERRO NA FUNCAO 'ComandoIterativo'\n");
+                            printf("Erro, esperava token ')'\n");
+                            return 0;
+                        }
+                    }
+                    else {
+                        return 0;
+                    }
+                }
+                else {
+                    printf("ERRO NA FUNCAO 'ComandoIterativo'\n");
+                    printf("Erro, esperava token '('\n");
+                    return 0;
+                }
+            }
+            else {
+                return 0;
+            }
+        }
+        else {
+            return 0;
+        }
+    }
+    else if (tk == TKFor) { // for
+        printf("CONSUMIU TOKEN for\n");
         getToken();
-        if(tk == TKAbreParenteses){// (
+        if (tk == TKAbreParenteses) { // (
+            printf("CONSUMIU TOKEN (\n");
             getToken();
-            if (ComandoExpressao()){
-                if (ComandoExpressao()){
-                    if (ComandoIterativo1Linha()){
+            if (ComandoExpressao()) {
+                if (ComandoExpressao()) {
+                    if (ComandoIterativo1Linha()) {
                         return 1;
-                    }//fecha22
-                    else{return 0;}
-                }//fecha22
-                else{return 0;}
-            }//fecha22
-            else{return 0;}
-        }//fecha22
-        else{return 0;}
-    }//fecha22
-    else{return 0;}
-}//fecha25
+                    } else {
+                        return 0;
+                    }
+                } else {
+                    return 0;
+                }
+            } else {
+                return 0;
+            }
+        } else {
+            printf("ERRO NA FUNCAO 'ComandoIterativo'\n");
+            printf("Erro, esperava token ')'\n");
+            return 0;
+        }
+    } else {
+        printf("ERRO NA FUNCAO 'ComandoIterativo'\n");
+        printf("Erro, esperava token 'do' ou 'while'\n");
+        return 0;
+    }
+}
 
 //ComandoIterativo1Linha -> ) Comando | Expressao ) Comando
-int ComandoIterativo1Linha(){
-    if(tk == TKFechaParenteses){// )
+int ComandoIterativo1Linha() {
+    printf("ENTROU ComandoIterativo1Linha \n");
+    if (tk == TKFechaParenteses) { // )
+        printf("CONSUMIU TOKEN )\n");
         getToken();
-        if (Comando()){
+        if (Comando()) {
             return 1;
-        }//fecha22
-        else{return 0;}
-    }//fecha22
-    else 	if (Expressao()){
-        if(tk == TKFechaParenteses){// )
+        } else {
+            return 0;
+        }
+    } else if (Expressao()) {
+        if (tk == TKFechaParenteses) { // )
+            printf("CONSUMIU TOKEN )\n");
             getToken();
-            if (Comando()){
+            if (Comando()) {
                 return 1;
-            }//fecha22
-            else{return 0;}
-        }//fecha22
-        else{return 0;}
-    }//fecha22
-    else{return 0;}
-}//fecha25
+            } else {
+                return 0;
+            }
+        } else {
+            return 0;
+        }
+    } else {
+        printf("ERRO NA FUNCAO 'ComandoIterativo1Linha'\n");
+        printf("Erro, esperava token ')'\n");
+        return 0;
+    }
+}
 
 //Init -> Atribuicao | { InitList Init1Linha
-int Init(){
-    if (Atribuicao()){
+int Init() {
+    printf("ENTROU Init \n");
+    if (Atribuicao()) {
         return 1;
-    }//fecha21
-    else if(tk == TKAbreChaves){// {
+    } else if (tk == TKAbreChaves) { // {
+        printf("CONSUMIU TOKEN {\n");
         getToken();
-        if (InitList()){
-            if (Init1Linha()){
+        if (InitList()) {
+            if (Init1Linha()) {
                 return 1;
-            }//fecha22
-            else{return 0;}
-        }//fecha22
-        else{return 0;}
-    }//fecha22
-    else{return 0;}
-}//fecha25
+            } else {
+                return 0;
+            }
+        } else {
+            return 0;
+        }
+    } else {
+        printf("ERRO NA FUNCAO 'Init'\n");
+        printf("Erro, esperava token '{'\n");
+        return 0;
+    }
+}
 
 //Init1Linha -> } | , }
-int Init1Linha(){
-    if(tk == TKFechaChaves){// }
+int Init1Linha() {
+    printf("ENTROU Init1Linha \n");
+    if (tk == TKFechaChaves) { // }
+        printf("CONSUMIU TOKEN }\n");
         getToken();
         return 1;
-    }//fecha23
-    else if(tk == TKVirgula){// ,
+    } else if (tk == TKVirgula) { // ,
+        printf("CONSUMIU TOKEN ,\n");
         getToken();
-        if(tk == TKFechaChaves){// }
+        if (tk == TKFechaChaves) { // }
+            printf("CONSUMIU TOKEN }\n");
             getToken();
             return 1;
-        }//fecha24
-        else{return 0;}
-    }//fecha24
-    else{return 0;}
-}//fecha25
+        }
+        else {
+            printf("ERRO NA FUNCAO 'Init1Linha'\n");
+            printf("Erro, esperava token '}'\n");
+            return 0;
+        }
+    }
+    else {
+        printf("ERRO NA FUNCAO 'Init1Linha'\n");
+        printf("Erro, esperava token '}' ou ','\n");
+        return 0;
+    }
+}
 
 //InitList -> Init | RestoInitList
-int InitList(){
-    if (Init()){
+int InitList() {
+    printf("ENTROU InitList \n");
+    if (Init()) {
         return 1;
-    }//fecha21
-    else if (RestoInitList()){
+    } else if (RestoInitList()) {
         return 1;
-    }//fecha21
-    else{return 0;}
-}//fecha25
+    } else {
+        return 0;
+    }
+}
 
 //RestoInitList -> , Init RestoInitList | ?
-int RestoInitList(){
-    if(tk == TKVirgula){// ,
+int RestoInitList() {
+    printf("ENTROU RestoInitList \n");
+    if (tk == TKVirgula) { // ,
+        printf("CONSUMIU TOKEN ,\n");
         getToken();
-        if (Init()){
-            if (RestoInitList()){
+        if (Init()) {
+            if (RestoInitList()) {
                 return 1;
-            }//fecha22
-            else{return 0;}
-        }//fecha22
-        else{return 0;}
-    }//fecha22
-    else {return 1;}
-}//fecha25
+            } else {
+                return 0;
+            }
+        } else {
+            return 0;
+        }
+    } else {
+        printf("WARNING NA FUNCAO RestoInitList esperava ',' e derivou vazio\n");
+        return 1;
+    }
+}
 
 //Atribuicao -> ExpressaoOr | ExpressaoUnaria OperadorAtribuicao Atribuicao
-int Atribuicao(){
-    if (ExpressaoOr()){
+int Atribuicao() {
+    printf("ENTROU Atribuicao \n");
+    if (ExpressaoOr()) {
         return 1;
-    }//fecha21
-    else 	if (ExpressaoUnaria()){
-        if (OperadorAtribuicao()){
-            if (Atribuicao()){
+    } else if (ExpressaoUnaria()) {
+        if (OperadorAtribuicao()) {
+            if (Atribuicao()) {
                 return 1;
-            }//fecha22
-            else{return 0;}
-        }//fecha22
-        else{return 0;}
-    }//fecha22
-    else{return 0;}
-}//fecha25
+            } else {
+                return 0;
+            }
+        } else {
+            return 0;
+        }
+    } else {
+        return 0;
+    }
+}
 
 //ExpressaoOr -> ExpressaoAnd RestoExpressaoOr
-int ExpressaoOr(){
-    if (ExpressaoAnd()){
-        if (RestoExpressaoOr()){
+int ExpressaoOr() {
+    printf("ENTROU ExpressaoOr \n");
+    if (ExpressaoAnd()) {
+        if (RestoExpressaoOr()) {
             return 1;
-        }//fecha22
-        else{return 0;}
-    }//fecha22
-    else{return 0;}
-}//fecha25
+        } else {
+            return 0;
+        }
+    } else {
+        return 0;
+    }
+}
 
 //RestoExpressaoOr -> or_op ExpressaoAnd RestoExpressaoOr | ?
-int RestoExpressaoOr(){
-    if(tk == TKOuLogico){// or_op
+int RestoExpressaoOr() {
+    printf("ENTROU RestoExpressaoOr \n");
+    if (tk == TKOuLogico) { // or_op
+        printf("CONSUMIU TOKEN or_op\n");
         getToken();
-        if (ExpressaoAnd()){
-            if (RestoExpressaoOr()){
+        if (ExpressaoAnd()) {
+            if (RestoExpressaoOr()) {
                 return 1;
-            }//fecha22
-            else{return 0;}
-        }//fecha22
-        else{return 0;}
-    }//fecha22
-    else {return 1;}
-}//fecha25
+            } else {
+                return 0;
+            }
+        } else {
+            return 0;
+        }
+    } else {
+        printf("WARNING NA FUNCAO RestoExpressaoOr esperava 'TKOuLogico' e derivou vazio\n");
+        return 1;
+    }
+}
 
 //ExpressaoAnd -> OuInclusivo RestoExpressaoAnd
-int ExpressaoAnd(){
-    if (OuInclusivo()){
-        if (RestoExpressaoAnd()){
+int ExpressaoAnd() {
+    printf("ENTROU ExpressaoAnd \n");
+    if (OuInclusivo()) {
+        if (RestoExpressaoAnd()) {
             return 1;
-        }//fecha22
-        else{return 0;}
-    }//fecha22
-    else{return 0;}
-}//fecha25
+        } else {
+            return 0;
+        }
+    } else {
+        return 0;
+    }
+}
 
 //RestoExpressaoAnd -> && OuInclusivo RestoExpressaoAnd | ?
-int RestoExpressaoAnd(){
-    if(tk == TKELogico){// &&
+int RestoExpressaoAnd() {
+    printf("ENTROU RestoExpressaoAnd \n");
+    if (tk == TKELogico) { // &&
+        printf("CONSUMIU TOKEN &&\n");
         getToken();
-        if (OuInclusivo()){
-            if (RestoExpressaoAnd()){
+        if (OuInclusivo()) {
+            if (RestoExpressaoAnd()) {
                 return 1;
-            }//fecha22
-            else{return 0;}
-        }//fecha22
-        else{return 0;}
-    }//fecha22
-    else {return 1;}
-}//fecha25
+            } else {
+                return 0;
+            }
+        } else {
+            return 0;
+        }
+    } else {
+        printf("WARNING NA FUNCAO RestoExpressaoAnd esperava 'TKOuLogico' e derivou vazio\n");
+        return 1;
+    }
+}
 
 //OuInclusivo -> OuExclusivo RestoOuInclusivo
-int OuInclusivo(){
-    if (OuExclusivo()){
-        if (RestoOuInclusivo()){
+int OuInclusivo() {
+    printf("ENTROU OuInclusivo \n");
+    if (OuExclusivo()) {
+        if (RestoOuInclusivo()) {
             return 1;
-        }//fecha22
-        else{return 0;}
-    }//fecha22
-    else{return 0;}
-}//fecha25
+        } else {
+            return 0;
+        }
+    } else {
+        return 0;
+    }
+}
 
 //RestoOuInclusivo -> PIPE OuExclusivo RestoOuInclusivo | ?
-int RestoOuInclusivo(){
-    if (tk == TKOuBitwise){
+int RestoOuInclusivo() {
+    printf("ENTROU RestoOuInclusivo \n");
+    if (tk == TKOuBitwise) {
+        printf("CONSUMIU TOKEN ouBitWise\n");
         getToken();
-        if (OuExclusivo()){
-            if (RestoOuInclusivo()){
+        if (OuExclusivo()) {
+            if (RestoOuInclusivo()) {
                 return 1;
-            }//fecha22
-            else{return 0;}
-        }//fecha22
-        else{return 0;}
-    }//fecha22
-    else {return 1;}
-}//fecha25
+            } else {
+                return 0;
+            }
+        } else {
+            return 0;
+        }
+    } else {
+        printf("WARNING NA FUNCAO RestoOuInclusivo esperava 'TKOuBitwise' e derivou vazio\n");
+        return 1;
+    }
+}
 
 //OuExclusivo -> AndBitwise RestoOuExclusivo
-int OuExclusivo(){
-    if (AndBitwise()){
-        if (RestoOuExclusivo()){
+int OuExclusivo() {
+    printf("ENTROU OuExclusivo \n");
+    if (AndBitwise()) {
+        if (RestoOuExclusivo()) {
             return 1;
-        }//fecha22
-        else{return 0;}
-    }//fecha22
-    else{return 0;}
-}//fecha25
+        } else {
+            return 0;
+        }
+    } else {
+        return 0;
+    }
+}
 
 //RestoOuExclusivo -> ^ AndBitwise RestoOuExclusivo | ?
-int RestoOuExclusivo(){
-    if(tk == TKXorBitwise){// ^
+int RestoOuExclusivo() {
+    printf("ENTROU RestoOuExclusivo \n");
+    if (tk == TKXorBitwise) { // ^
+        printf("CONSUMIU TOKEN ^\n");
         getToken();
-        if (AndBitwise()){
-            if (RestoOuExclusivo()){
+        if (AndBitwise()) {
+            if (RestoOuExclusivo()) {
                 return 1;
-            }//fecha22
-            else{return 0;}
-        }//fecha22
-        else{return 0;}
-    }//fecha22
-    else {return 1;}
-}//fecha25
+            } else {
+                return 0;
+            }
+        } else {
+            return 0;
+        }
+    } else {
+        printf("WARNING NA FUNCAO RestoOuExclusivo esperava 'TKXorBitwise' e derivou vazio\n");
+        return 1;
+    }
+}
 
 //AndBitwise -> ExpressaoIgual RestoAndBitwise
-int AndBitwise(){
-    if (ExpressaoIgual()){
-        if (RestoAndBitwise()){
+int AndBitwise() {
+    printf("ENTROU AndBitwise \n");
+    if (ExpressaoIgual()) {
+        if (RestoAndBitwise()) {
             return 1;
-        }//fecha22
-        else{return 0;}
-    }//fecha22
-    else{return 0;}
-}//fecha25
+        } else {
+            return 0;
+        }
+    } else {
+        return 0;
+    }
+}
 
 //RestoAndBitwise -> & ExpressaoIgual RestoAndBitwise | ?
-int RestoAndBitwise(){
-    if(tk == TKEBitwise){// &
+int RestoAndBitwise() {
+    printf("ENTROU RestoAndBitwise \n");
+    if (tk == TKEBitwise) { // &
+        printf("CONSUMIU TOKEN &\n");
         getToken();
-        if (ExpressaoIgual()){
-            if (RestoAndBitwise()){
+        if (ExpressaoIgual()) {
+            if (RestoAndBitwise()) {
                 return 1;
-            }//fecha22
-            else{return 0;}
-        }//fecha22
-        else{return 0;}
-    }//fecha22
-    else {return 1;}
-}//fecha25
+            } else {
+                return 0;
+            }
+        } else {
+            return 0;
+        }
+    } else {
+        return 1;
+    }
+}
 
 //ExpressaoIgual -> ExpressaoRelac RestoExpressaoIgual
-int ExpressaoIgual(){
-    if (ExpressaoRelac()){
-        if (RestoExpressaoIgual()){
+int ExpressaoIgual() {
+    printf("ENTROU ExpressaoIgual \n");
+    if (ExpressaoRelac()) {
+        if (RestoExpressaoIgual()) {
             return 1;
-        }//fecha22
-        else{return 0;}
-    }//fecha22
-    else{return 0;}
-}//fecha25
+        } else {
+            return 0;
+        }
+    } else {
+        return 0;
+    }
+}
 
 //RestoExpressaoIgual -> == ExpressaoRelac RestoExpressaoIgual | != ExpressaoRelac RestoExpressaoIgual | ?
-int RestoExpressaoIgual(){
-    if(tk == TKIgual){// ==
+int RestoExpressaoIgual() {
+    printf("ENTROU RestoExpressaoIgual \n");
+    if (tk == TKIgual) { // ==
+        printf("CONSUMIU TOKEN ==\n");
         getToken();
-        if (ExpressaoRelac()){
-            if (RestoExpressaoIgual()){
+        if (ExpressaoRelac()) {
+            if (RestoExpressaoIgual()) {
                 return 1;
-            }//fecha22
-            else{return 0;}
-        }//fecha22
-        else{return 0;}
-    }//fecha22
-    else if(tk == TKDiferente){// !=
+            } else {
+                return 0;
+            }
+        } else {
+            return 0;
+        }
+    } else if (tk == TKDiferente) { // !=
+        printf("CONSUMIU TOKEN !=\n");
         getToken();
-        if (ExpressaoRelac()){
-            if (RestoExpressaoIgual()){
+        if (ExpressaoRelac()) {
+            if (RestoExpressaoIgual()) {
                 return 1;
-            }//fecha22
-            else{return 0;}
-        }//fecha22
-        else{return 0;}
-    }//fecha22
-    else {return 1;}
-}//fecha25
+            } else {
+                return 0;
+            }
+        } else {
+            return 0;
+        }
+    } else {
+        printf("WARNING NA FUNCAO RestoExpressaoIgual esperava '= ou ==' e derivou vazio");
+        return 1;
+    }
+}
 
 //ExpressaoRelac -> ExpressaoDesl RestoExpressaoRelac
-int ExpressaoRelac(){
-    if (ExpressaoDesl()){
-        if (RestoExpressaoRelac()){
+int ExpressaoRelac() {
+    printf("ENTROU ExpressaoRelac \n");
+    if (ExpressaoDesl()) {
+        if (RestoExpressaoRelac()) {
             return 1;
-        }//fecha22
-        else{return 0;}
-    }//fecha22
-    else{return 0;}
-}//fecha25
+        } else {
+            return 0;
+        }
+    } else {
+        return 0;
+    }
+}
 
 //RestoExpressaoRelac -> < ExpressaoDesl RestoExpressaoRelac | > ExpressaoDesl RestoExpressaoRelac | <= ExpressaoDesl RestoExpressaoRelac | >= ExpressaoDesl RestoExpressaoRelac | ?
-int RestoExpressaoRelac(){
-    if(tk == TKMenor){// <
+int RestoExpressaoRelac() {
+    printf("ENTROU RestoExpressaoRelac \n");
+    if (tk == TKMenor) { // <
+        printf("CONSUMIU TOKEN <\n");
         getToken();
-        if (ExpressaoDesl()){
-            if (RestoExpressaoRelac()){
+        if (ExpressaoDesl()) {
+            if (RestoExpressaoRelac()) {
                 return 1;
-            }//fecha22
-            else{return 0;}
-        }//fecha22
-        else{return 0;}
-    }//fecha22
-    else if(tk == TKMaior){// >
+            } else {
+                return 0;
+            }
+        } else {
+            return 0;
+        }
+    } else if (tk == TKMaior) { // >
+        printf("CONSUMIU TOKEN >\n");
         getToken();
-        if (ExpressaoDesl()){
-            if (RestoExpressaoRelac()){
+        if (ExpressaoDesl()) {
+            if (RestoExpressaoRelac()) {
                 return 1;
-            }//fecha22
-            else{return 0;}
-        }//fecha22
-        else{return 0;}
-    }//fecha22
-    else if(tk == TKMenorOuIgual){// <=
+            } else {
+                return 0;
+            }
+        } else {
+            return 0;
+        }
+    } else if (tk == TKMenorOuIgual) { // <=
+        printf("CONSUMIU TOKEN <=\n");
         getToken();
-        if (ExpressaoDesl()){
-            if (RestoExpressaoRelac()){
+        if (ExpressaoDesl()) {
+            if (RestoExpressaoRelac()) {
                 return 1;
-            }//fecha22
-            else{return 0;}
-        }//fecha22
-        else{return 0;}
-    }//fecha22
-    else if(tk == TKMaiorOuIgual){// >=
+            } else {
+                return 0;
+            }
+        } else {
+            return 0;
+        }
+    } else if (tk == TKMaiorOuIgual) { // >=
+        printf("CONSUMIU TOKEN >=\n");
         getToken();
-        if (ExpressaoDesl()){
-            if (RestoExpressaoRelac()){
+        if (ExpressaoDesl()) {
+            if (RestoExpressaoRelac()) {
                 return 1;
-            }//fecha22
-            else{return 0;}
-        }//fecha22
-        else{return 0;}
-    }//fecha22
-    else {return 1;}
-}//fecha25
+            } else {
+                return 0;
+            }
+        } else {
+            return 0;
+        }
+    } else {
+        return 1;
+    }
+}
 
 //ExpressaoDesl -> ExpressaoAd RestoExpressaoDesl
-int ExpressaoDesl(){
-    if (ExpressaoAd()){
-        if (RestoExpressaoDesl()){
+int ExpressaoDesl() {
+    printf("ENTROU ExpressaoDesl \n");
+    if (ExpressaoAd()) {
+        if (RestoExpressaoDesl()) {
             return 1;
-        }//fecha22
-        else{return 0;}
-    }//fecha22
-    else{return 0;}
-}//fecha25
+        } else {
+            return 0;
+        }
+    } else {
+        return 0;
+    }
+}
 
 //RestoExpressaoDesl -> << ExpressaoAd RestoExpressaoDesl | >> ExpressaoAd RestoExpressaoDesl
-int RestoExpressaoDesl(){
-    if(tk == TKEsquerdaBitwise){// <<
+int RestoExpressaoDesl() {
+    printf("ENTROU RestoExpressaoDesl \n");
+    if (tk == TKEsquerdaBitwise) { // <<
+        printf("CONSUMIU TOKEN <<\n");
         getToken();
-        if (ExpressaoAd()){
-            if (RestoExpressaoDesl()){
+        if (ExpressaoAd()) {
+            if (RestoExpressaoDesl()) {
                 return 1;
-            }//fecha22
-            else{return 0;}
-        }//fecha22
-        else{return 0;}
-    }//fecha22
-    else if(tk == TKDireitaBitwise){// >>
+            } else {
+                return 0;
+            }
+        } else {
+            return 0;
+        }
+    } else if (tk == TKDireitaBitwise) { // >>
+        printf("CONSUMIU TOKEN >>\n");
         getToken();
-        if (ExpressaoAd()){
-            if (RestoExpressaoDesl()){
+        if (ExpressaoAd()) {
+            if (RestoExpressaoDesl()) {
                 return 1;
-            }//fecha22
-            else{return 0;}
-        }//fecha22
-        else{return 0;}
-    }//fecha22
-    else{return 0;}
-}//fecha25
+            } else {
+                return 0;
+            }
+        } else {
+            return 0;
+        }
+    } else {
+        return 0;
+    }
+}
 
 //ExpressaoAd -> ExpressaoMult RestoExpressaoAd
-int ExpressaoAd(){
-    if (ExpressaoMult()){
-        if (RestoExpressaoAd()){
+int ExpressaoAd() {
+    printf("ENTROU ExpressaoAd \n");
+    if (ExpressaoMult()) {
+        if (RestoExpressaoAd()) {
             return 1;
-        }//fecha22
-        else{return 0;}
-    }//fecha22
-    else{return 0;}
-}//fecha25
+        } else {
+            return 0;
+        }
+    } else {
+        return 0;
+    }
+}
 
 //RestoExpressaoAd -> + ExpressaoMult RestoExpressaoAd | - ExpressaoMult RestoExpressaoAd | ?
-int RestoExpressaoAd(){
-    if(tk == TKSoma){// +
+int RestoExpressaoAd() {
+    printf("ENTROU RestoExpressaoAd \n");
+    if (tk == TKSoma) { // +
+        printf("CONSUMIU TOKEN +\n");
         getToken();
-        if (ExpressaoMult()){
-            if (RestoExpressaoAd()){
+        if (ExpressaoMult()) {
+            if (RestoExpressaoAd()) {
                 return 1;
-            }//fecha22
-            else{return 0;}
-        }//fecha22
-        else{return 0;}
-    }//fecha22
-    else if(tk == TKSubtrai){// -
+            } else {
+                return 0;
+            }
+        } else {
+            return 0;
+        }
+    } else if (tk == TKSubtrai) { // -
+        printf("CONSUMIU TOKEN -\n");
         getToken();
-        if (ExpressaoMult()){
-            if (RestoExpressaoAd()){
+        if (ExpressaoMult()) {
+            if (RestoExpressaoAd()) {
                 return 1;
-            }//fecha22
-            else{return 0;}
-        }//fecha22
-        else{return 0;}
-    }//fecha22
-    else {return 1;}
-}//fecha25
+            } else {
+                return 0;
+            }
+        } else {
+            return 0;
+        }
+    } else {
+        return 1;
+    }
+}
 
 //ExpressaoMult -> ExpressaoUnaria RestoExpressaoMult
-int ExpressaoMult(){
-    if (ExpressaoUnaria()){
-        if (RestoExpressaoMult()){
+int ExpressaoMult() {
+    printf("ENTROU ExpressaoMult \n");
+    if (ExpressaoUnaria()) {
+        if (RestoExpressaoMult()) {
             return 1;
-        }//fecha22
-        else{return 0;}
-    }//fecha22
-    else{return 0;}
-}//fecha25
+        } else {
+            return 0;
+        }
+    } else {
+        return 0;
+    }
+}
 
 //RestoExpressaoMult -> * ExpressaoUnaria RestoExpressaoMult | / ExpressaoUnaria RestoExpressaoMult | % ExpressaoUnaria RestoExpressaoMult | ?
-int RestoExpressaoMult(){
-    if(tk == TKMultiplicacao){// *
+int RestoExpressaoMult() {
+    printf("ENTROU RestoExpressaoMult \n");
+    if (tk == TKMultiplicacao) { // *
+        printf("CONSUMIU TOKEN *\n");
         getToken();
-        if (ExpressaoUnaria()){
-            if (RestoExpressaoMult()){
+        if (ExpressaoUnaria()) {
+            if (RestoExpressaoMult()) {
                 return 1;
-            }//fecha22
-            else{return 0;}
-        }//fecha22
-        else{return 0;}
-    }//fecha22
-    else if(tk == TKDivide){// /
+            } else {
+                return 0;
+            }
+        } else {
+            return 0;
+        }
+    } else if (tk == TKDivide) { // /
+        printf("CONSUMIU TOKEN /\n");
         getToken();
-        if (ExpressaoUnaria()){
-            if (RestoExpressaoMult()){
+        if (ExpressaoUnaria()) {
+            if (RestoExpressaoMult()) {
                 return 1;
-            }//fecha22
-            else{return 0;}
-        }//fecha22
-        else{return 0;}
-    }//fecha22
-    else if(tk == TKResto){// %
+            } else {
+                return 0;
+            }
+        } else {
+            return 0;
+        }
+    } else if (tk == TKResto) { // %
+        printf("CONSUMIU TOKEN %\n");
         getToken();
-        if (ExpressaoUnaria()){
-            if (RestoExpressaoMult()){
+        if (ExpressaoUnaria()) {
+            if (RestoExpressaoMult()) {
                 return 1;
-            }//fecha22
-            else{return 0;}
-        }//fecha22
-        else{return 0;}
-    }//fecha22
-    else {return 1;}
-}//fecha25
+            } else {
+                return 0;
+            }
+        } else {
+            return 0;
+        }
+    } else {
+        return 1;
+    }
+}
 
 //ExpressaoUnaria -> ExpressaoPosfix | ++ ExpressaoUnaria | -- ExpressaoUnaria | OperadorUnario ExpressaoUnaria
-int ExpressaoUnaria(){
-    if (ExpressaoPosfix()){
+int ExpressaoUnaria() {
+    printf("ENTROU ExpressaoUnaria \n");
+    if (ExpressaoPosfix()) {
         return 1;
-    }//fecha21
-    else if(tk == TKIncrementa){// ++
+    } else if (tk == TKIncrementa) { // ++
+        printf("CONSUMIU TOKEN ++\n");
         getToken();
-        if (ExpressaoUnaria()){
+        if (ExpressaoUnaria()) {
             return 1;
-        }//fecha22
-        else{return 0;}
-    }//fecha22
-    else if(tk == TKDecrementa){// --
+        } else {
+            return 0;
+        }
+    } else if (tk == TKDecrementa) { // --
+        printf("CONSUMIU TOKEN --\n");
         getToken();
-        if (ExpressaoUnaria()){
+        if (ExpressaoUnaria()) {
             return 1;
-        }//fecha22
-        else{return 0;}
-    }//fecha22
-    else 	if (OperadorUnario()){
-        if (ExpressaoUnaria()){
+        } else {
+            return 0;
+        }
+    } else if (OperadorUnario()) {
+        if (ExpressaoUnaria()) {
             return 1;
-        }//fecha22
-        else{return 0;}
-    }//fecha22
-    else{return 0;}
-}//fecha25
+        } else {
+            return 0;
+        }
+    } else {
+        return 0;
+    }
+}
 
 //ExpressaoPosfix -> ExpressaoPrim RestoExpressaoPosfix
-int ExpressaoPosfix(){
-    if (ExpressaoPrim()){
-        if (RestoExpressaoPosfix()){
+int ExpressaoPosfix() {
+    printf("ENTROU ExpressaoPosfix \n");
+    if (ExpressaoPrim()) {
+        if (RestoExpressaoPosfix()) {
             return 1;
-        }//fecha22
-        else{return 0;}
-    }//fecha22
-    else{return 0;}
-}//fecha25
+        } else {
+            return 0;
+        }
+    } else {
+        return 0;
+    }
+}
 
 //RestoExpressaoPosfix -> [ Expressao ] RestoExpressaoPosfix | ( RestoExpressaoPosfix2 | . id RestoExpressaoPosfix | -> id RestoExpressaoPosfix | ++ RestoExpressaoPosfix | -- RestoExpressaoPosfix | ?
-int RestoExpressaoPosfix(){
-    if(tk == TKAbreColchetes){// [
+int RestoExpressaoPosfix() {
+    printf("ENTROU RestoExpressaoPosfix \n");
+    if (tk == TKAbreColchetes) { // [
+        printf("CONSUMIU TOKEN [\n");
         getToken();
-        if (Expressao()){
-            if(tk == TKFechaColchetes){// ]
+        if (Expressao()) {
+            if (tk == TKFechaColchetes) { // ]
+                printf("CONSUMIU TOKEN ]\n");
                 getToken();
-                if (RestoExpressaoPosfix()){
+                if (RestoExpressaoPosfix()) {
                     return 1;
-                }//fecha22
-                else{return 0;}
-            }//fecha22
-            else{return 0;}
-        }//fecha22
-        else{return 0;}
-    }//fecha22
-    else if(tk == TKAbreParenteses){// (
+                } else {
+                    return 0;
+                }
+            } else {
+                return 0;
+            }
+        } else {
+            return 0;
+        }
+    } else if (tk == TKAbreParenteses) { // (
+        printf("CONSUMIU TOKEN (\n");
         getToken();
-        if (RestoExpressaoPosfix2()){
+        if (RestoExpressaoPosfix2()) {
             return 1;
-        }//fecha22
-        else{return 0;}
-    }//fecha22
-    else if(tk == TKPonto){// .
+        } else {
+            return 0;
+        }
+    } else if (tk == TKPonto) { // .
+        printf("CONSUMIU TOKEN .\n");
         getToken();
-        if(tk == TKId){// id
+        if (tk == TKId) { // id
+            printf("CONSUMIU TOKEN id\n");
             getToken();
-            if (RestoExpressaoPosfix()){
+            if (RestoExpressaoPosfix()) {
                 return 1;
-            }//fecha22
-            else{return 0;}
-        }//fecha22
-        else{return 0;}
-    }//fecha22
-    else if(tk == TKPontero){// ->
+            } else {
+                return 0;
+            }
+        } else {
+            return 0;
+        }
+    } else if (tk == TKPontero) { // ->
+        printf("CONSUMIU TOKEN ->\n");
         getToken();
-        if(tk == TKId){// id
+        if (tk == TKId) { // id
             getToken();
-            if (RestoExpressaoPosfix()){
+            if (RestoExpressaoPosfix()) {
                 return 1;
-            }//fecha22
-            else{return 0;}
-        }//fecha22
-        else{return 0;}
-    }//fecha22
-    else if(tk == TKIncrementa){// ++
+            } else {
+                return 0;
+            }
+        } else {
+            return 0;
+        }
+    } else if (tk == TKIncrementa) { // ++
+        printf("CONSUMIU TOKEN ++\n");
         getToken();
-        if (RestoExpressaoPosfix()){
+        if (RestoExpressaoPosfix()) {
             return 1;
-        }//fecha22
-        else{return 0;}
-    }//fecha22
-    else if(tk == TKDecrementa){// --
+        } else {
+            return 0;
+        }
+    } else if (tk == TKDecrementa) { // --
+        printf("CONSUMIU TOKEN --\n");
         getToken();
-        if (RestoExpressaoPosfix()){
+        if (RestoExpressaoPosfix()) {
             return 1;
-        }//fecha22
-        else{return 0;}
-    }//fecha22
-    else {return 1;}
-}//fecha25
+        } else {
+            return 0;
+        }
+    } else {
+        return 1;
+    }
+}
 
 //RestoExpressaoPosfix2 -> ArgumentList ) RestoExpressaoPosfix | ) RestoExpressaoPosfix
-int RestoExpressaoPosfix2(){
-    if (ArgumentList()){
-        if(tk == TKFechaParenteses){// )
+int RestoExpressaoPosfix2() {
+    printf("ENTROU RestoExpressaoPosfix2 \n");
+    if (ArgumentList()) {
+        if (tk == TKFechaParenteses) { // )
+            printf("CONSUMIU TOKEN )\n");
             getToken();
-            if (RestoExpressaoPosfix()){
+            if (RestoExpressaoPosfix()) {
                 return 1;
-            }//fecha22
-            else{return 0;}
-        }//fecha22
-        else{return 0;}
-    }//fecha22
-    else if(tk == TKFechaParenteses){// )
+            } else {
+                return 0;
+            }
+        } else {
+            return 0;
+        }
+    } else if (tk == TKFechaParenteses) { // )
+        printf("CONSUMIU TOKEN )\n");
         getToken();
-        if (RestoExpressaoPosfix()){
+        if (RestoExpressaoPosfix()) {
             return 1;
-        }//fecha22
-        else{return 0;}
-    }//fecha22
-    else{return 0;}
-}//fecha25
+        } else {
+            return 0;
+        }
+    } else {
+        return 0;
+    }
+}
 
 //ExpressaoPrim -> id | constant | string_literal | ( Expressao )
-int ExpressaoPrim(){
-    if(tk == TKId){// id
+int ExpressaoPrim() {
+    printf("ENTROU ExpressaoPrim \n");
+    if (tk == TKId) { // id
+        printf("CONSUMIU TOKEN id\n");
         getToken();
         return 1;
-    }//fecha23
-    else if(tk == TKConstante){// constant
+    } else if (tk == TKConstante) { // constant
+        printf("CONSUMIU TOKEN constant\n");
         getToken();
         return 1;
-    }//fecha23
-    else if(tk == TKString){// string_literal
+    } else if (tk == TKString) { // string_literal
+        printf("CONSUMIU TOKEN string_literal\n");
         getToken();
         return 1;
-    }//fecha23
-    else if(tk == TKAbreParenteses){// (
+    } else if (tk == TKAbreParenteses) { // (
+        printf("CONSUMIU TOKEN (\n");
         getToken();
-        if (Expressao()){
-            if(tk == TKFechaParenteses){// )
+        if (Expressao()) {
+            if (tk == TKFechaParenteses) { // )
+                printf("CONSUMIU TOKEN )\n");
                 getToken();
                 return 1;
-            }//fecha24
-            else{return 0;}
-        }//fecha24
-        else{return 0;}
-    }//fecha24
-    else{return 0;}
-}//fecha25
+            }
+            else {
+                return 0;
+            }
+        }
+        else {
+            return 0;
+        }
+    }
+    else {
+        return 0;
+    }
+}
 
 //ArgumentList -> Atribuicao RestoArgumentList
-int ArgumentList(){
-    if (Atribuicao()){
-        if (RestoArgumentList()){
+int ArgumentList() {
+    printf("ENTROU ArgumentList \n");
+    if (Atribuicao()) {
+        if (RestoArgumentList()) {
             return 1;
-        }//fecha22
-        else{return 0;}
-    }//fecha22
-    else{return 0;}
-}//fecha25
+        } else {
+            return 0;
+        }
+    } else {
+        return 0;
+    }
+}
 
 //RestoArgumentList -> , Atribuicao RestoArgumentList
-int RestoArgumentList(){
-    if(tk == TKVirgula){// ,
+int RestoArgumentList() {
+    printf("ENTROU RestoArgumentList \n");
+    if (tk == TKVirgula) { // ,
+        printf("CONSUMIU TOKEN ,\n");
         getToken();
-        if (Atribuicao()){
-            if (RestoArgumentList()){
+        if (Atribuicao()) {
+            if (RestoArgumentList()) {
                 return 1;
-            }//fecha22
-            else{return 0;}
-        }//fecha22
-        else{return 0;}
-    }//fecha22
-    else{return 0;}
-}//fecha25
+            } else {
+                return 0;
+            }
+        } else {
+            return 0;
+        }
+    } else {
+        return 0;
+    }
+}
 
 //OperadorUnario -> & | * | + | - | ~ | !
-int OperadorUnario(){
-    if(tk == TKEBitwise){// &
+int OperadorUnario() {
+    printf("ENTROU OperadorUnario \n");
+    if (tk == TKEBitwise) { // &
+        printf("CONSUMIU TOKEN &\n");
         getToken();
         return 1;
-    }//fecha23
-    else if(tk == TKMultiplicacao){// *
+    } else if (tk == TKMultiplicacao) { // *
+        printf("CONSUMIU TOKEN *\n");
         getToken();
         return 1;
-    }//fecha23
-    else if(tk == TKSoma){// +
+    } else if (tk == TKSoma) { // +
+        printf("CONSUMIU TOKEN +\n");
         getToken();
         return 1;
-    }//fecha23
-    else if(tk == TKSubtrai){// -
+    } else if (tk == TKSubtrai) { // -
+        printf("CONSUMIU TOKEN -\n");
         getToken();
         return 1;
-    }//fecha23
-    else if(tk == TKNaoBitwise){// ~
+    } else if (tk == TKNaoBitwise) { // ~
+        printf("CONSUMIU TOKEN ~\n");
         getToken();
         return 1;
-    }//fecha23
-    else if(tk == TKNegacao){// !
+    } else if (tk == TKNegacao) { // !
+        printf("CONSUMIU TOKEN !\n");
         getToken();
         return 1;
-    }//fecha23
-    else{return 0;}
-}//fecha25
+    } else {
+        return 0;
+    }
+}
 
 //OperadorAtribuicao -> = | *= | /= | %= | += | -= | <<= | >>= | &= | ^= | or_assign
-int OperadorAtribuicao(){
-    if(tk == TKAtribuicao){// =
+int OperadorAtribuicao() {
+    printf("ENTROU OperadorAtribuicao \n");
+    if (tk == TKAtribuicao) { // =
+        printf("CONSUMIU TOKEN =\n");
         getToken();
         return 1;
-    }//fecha23
-    else if(tk == TKMultiplicacaoAtribuicao){// *=
+    } else if (tk == TKMultiplicacaoAtribuicao) { // *=
+        printf("CONSUMIU TOKEN *=\n");
         getToken();
         return 1;
-    }//fecha23
-    else if(tk == TKDivisaoAtribuicao){// /=
+    } else if (tk == TKDivisaoAtribuicao) { // /=
+        printf("CONSUMIU TOKEN /=\n");
         getToken();
         return 1;
-    }//fecha23
-    else if(tk == TKRestoAtribuicao){// %=
+    } else if (tk == TKRestoAtribuicao) { // %=
+        printf("CONSUMIU TOKEN %=\n");
         getToken();
         return 1;
-    }//fecha23
-    else if(tk == TKSomaAtribuicao){// +=
+    } else if (tk == TKSomaAtribuicao) { // +=
+        printf("CONSUMIU TOKEN +=\n");
         getToken();
         return 1;
-    }//fecha23
-    else if(tk == TKSubtraiAtribuicao){// -=
+    } else if (tk == TKSubtraiAtribuicao) { // -=
+        printf("CONSUMIU TOKEN -=\n");
         getToken();
         return 1;
-    }//fecha23
-    else if(tk == TKAtribuicaoEsquerdaBitwise){// <<=
+    } else if (tk == TKAtribuicaoEsquerdaBitwise) { // <<=
+        printf("CONSUMIU TOKEN <<=\n");
         getToken();
         return 1;
-    }//fecha23
-    else if(tk == TKAtribuicaoDireitoBitwise){// >>=
+    } else if (tk == TKAtribuicaoDireitoBitwise) { // >>=
+        printf("CONSUMIU TOKEN >>=\n");
         getToken();
         return 1;
-    }//fecha23
-    else if(tk == TKEAtribuicaoBitwise){// &=
+    } else if (tk == TKEAtribuicaoBitwise) { // &=
+        printf("CONSUMIU TOKEN &=\n");
         getToken();
         return 1;
-    }//fecha23
-    else if(tk == TKXorAtribuicaoBitwise){// ^=
+    } else if (tk == TKXorAtribuicaoBitwise) { // ^=
+        printf("CONSUMIU TOKEN ^=\n");
         getToken();
         return 1;
-    }//fecha23
-    else if(tk == TKOuAtribuicaoBitwise){// or_assign
+    } else if (tk == TKOuAtribuicaoBitwise) { // or_assign
+        printf("CONSUMIU TOKEN or_assign\n");
         getToken();
         return 1;
-    }//fecha23
-    else{return 0;}
-}//fecha25
+    } else {
+        return 0;
+    }
+}
 
 //Expressao -> Atribuicao RestoExpressao
-int Expressao(){
-    if (Atribuicao()){
-        if (RestoExpressao()){
+int Expressao() {
+    printf("ENTROU Expressao \n");
+    if (Atribuicao()) {
+        if (RestoExpressao()) {
             return 1;
-        }//fecha22
-        else{return 0;}
-    }//fecha22
-    else{return 0;}
-}//fecha25
+        } else {
+            return 0;
+        }
+    } else {
+        return 0;
+    }
+}
 
 //RestoExpressao -> , Atribuicao RestoExpressao | ?
-int RestoExpressao(){
-    if(tk == TKVirgula){// ,
+int RestoExpressao() {
+    printf("ENTROU RestoExpressao \n");
+    if (tk == TKVirgula) { // ,
+        printf("CONSUMIU TOKEN ,\n");
         getToken();
-        if (Atribuicao()){
-            if (RestoExpressao()){
+        if (Atribuicao()) {
+            if (RestoExpressao()) {
                 return 1;
-            }//fecha22
-            else{return 0;}
-        }//fecha22
-        else{return 0;}
-    }//fecha22
-    else {return 1;}
-}//fecha25
+            } else {
+                return 0;
+            }
+        } else {
+            return 0;
+        }
+    } else {
+        return 1;
+    }
+}
 
-
-int main(){
-    //arqin=fopen("D:\\UCS\\Linguagens Formais\\TDE4\\Projetos\\TDE4_2\\codigoTeste.txt","rb");
-    arqin=fopen("C:\\Users\\filip\\Documents\\Formais\\TDE4\\codigoTeste.txt","rb");
+int main() {
+    arqin = fopen("C:\\Users\\filip\\Documents\\Formais\\TDE4\\codigoTeste.txt", "rb");
 
     if (!arqin) {
         printf("Erro na abertura do fonte.\n");
@@ -1858,25 +2435,25 @@ int main(){
     proxC(); // le primeiro caracter do arquivo
     getToken(); // le primeiro token
 
-    while (tk!=TKFimArquivo)
-    {
+    while (tk != TKFimArquivo) {
         //struct palavraReservada token_encontrado = buscar_token(tk);
+        printf("token encontrado: %s\n", lex);
         getToken();
+
     }
 
     printf("Passou no lexico!!!\nAgora Vamos testar o sintatico\n");
     printf("*********************************\n"
-           "*********************************\n"
-           "*********************************\n"
-           "*********************************\n\n");
+        "*********************************\n"
+        "*********************************\n"
+        "*********************************\n\n");
 
-    arqin=fopen("C:\\Users\\filip\\Documents\\Formais\\TDE4\\codigoTeste.txt","rb");
+    arqin = fopen("C:\\Users\\filip\\Documents\\Formais\\TDE4\\codigoTeste.txt", "rb");
 
     proxC(); // le primeiro caracter do arquivo
     getToken(); // le primeiro token
-    if(ProgramaC()){
+    if (ProgramaC()) {
         printf("Passou no sintatico!\n");
-    }
-    else printf("Erro sintatico!\n");
+    } else printf("Erro sintatico!\n");
     return 1;
 }
