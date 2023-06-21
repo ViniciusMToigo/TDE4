@@ -74,8 +74,6 @@ int colunaInicial = 0;
 int tk;
 char lex[20]; //lexema gerado pela sequencia de leituras de tokens
 FILE * arqin;
-FILE * filePtr;
-
 char c; //
 
 struct palavraReservada {
@@ -149,7 +147,10 @@ int palavra_reservada(char lex[]) {
     return TKId; //caso n�o seja uma palavra reservada, ser� considerada como um identificador
 }
 
+void restaurarDados(int posicao, int tokenAtual);
+
 void getToken();
+
 void proxC();
 
 void proxC() {
@@ -647,16 +648,29 @@ int RestoExpressao();
 
 // <*********** INICIO DO ANALISADOR SINT�TICO DESCENDENTE RECURSIVO SEM RETROCESSO ***********>
 
+void restaurarDados(int posicao, int tokenAtual){
+    fseek(arqin, posicao, SEEK_SET);
+    tk = tokenAtual;
+}
+
 //ProgramaC -> Funcao RestoProgramaC | Declaracao RestoProgramaC
 int ProgramaC() {
     printf("ENTROU ProgramaC \n");
+
+    int posicao = ftell(arqin);
+    int tokenAtual = tk;
+
     if (Funcao()) {
         if (RestoProgramaC()) {
             return 1;
         } else {
             return 0;
         }
-    } else if (Declaracao()) {
+    }
+
+    restaurarDados(posicao, tokenAtual);
+
+    if (Declaracao()) {
         if (RestoProgramaC()) {
             return 1;
         } else {
@@ -2426,7 +2440,7 @@ int RestoExpressao() {
 }
 
 int main() {
-    arqin = fopen("C:\\Users\\filip\\Documents\\Formais\\TDE4\\codigoTeste.txt", "rb");
+    arqin = fopen("D:\\UCS\\Linguagens Formais\\TDE4\\Projetos\\TDE4\\codigo.c", "rb");
 
     if (!arqin) {
         printf("Erro na abertura do fonte.\n");
@@ -2449,7 +2463,7 @@ int main() {
         "*********************************\n"
         "*********************************\n\n");
 
-    arqin = fopen("C:\\Users\\filip\\Documents\\Formais\\TDE4\\codigoTeste.txt", "rb");
+    arqin = fopen("D:\\UCS\\Linguagens Formais\\TDE4\\Projetos\\TDE4\\codigo.c", "rb");
 
     proxC(); // le primeiro caracter do arquivo
     getToken(); // le primeiro token
