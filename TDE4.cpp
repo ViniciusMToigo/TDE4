@@ -684,13 +684,20 @@ int ProgramaC() {
 //RestoProgramaC -> Funcao RestoProgramaC | Declaracao RestoProgramaC | ?
 int RestoProgramaC() {
     printf("ENTROU RestoProgramaC \n");
+    int posicao = ftell(arqin);
+    int tokenAtual = tk;
+
     if (Funcao()) {
         if (RestoProgramaC()) {
             return 1;
         } else {
             return 0;
         }
-    } else if (Declaracao()) {
+    }
+
+    restaurarDados(posicao, tokenAtual);
+
+    if (Declaracao()) {
         if (RestoProgramaC()) {
             return 1;
         } else {
@@ -704,13 +711,20 @@ int RestoProgramaC() {
 //Declaracao -> DeclaracaoSpec Declaracao1Linha | DeclaracaoDireto
 int Declaracao() {
     printf("ENTROU Declaracao \n");
+    int posicao = ftell(arqin);
+    int tokenAtual = tk;
+
     if (DeclaracaoSpec()) {
         if (Declaracao1Linha()) {
             return 1;
         } else {
             return 0;
         }
-    } else if (DeclaracaoDireto()) {
+    }
+
+    restaurarDados(posicao, tokenAtual);
+
+    if (DeclaracaoDireto()) {
         return 1;
     } else {
         return 0;
@@ -720,11 +734,18 @@ int Declaracao() {
 //Declaracao1Linha -> ; | InitDeclaracaoLista ;
 int Declaracao1Linha() {
     printf("ENTROU Declaracao1Linha \n");
+    int posicao = ftell(arqin);
+    int tokenAtual = tk;
+
     if (tk == TKPontoEVirgula) { // ;
         printf("CONSUMIU TOKEN ;\n");
         getToken();
         return 1;
-    } else if (InitDeclaracaoLista()) {
+    }
+
+    restaurarDados(posicao, tokenAtual);
+
+    if (InitDeclaracaoLista()) {
         if (tk == TKPontoEVirgula) { // ;
             printf("CONSUMIU TOKEN ;\n");
             getToken();
@@ -881,6 +902,9 @@ int Pointer() {
 //DeclaracaoDireto -> id RestoDeclaracaoDireto | ( Declaracao ) RestoDeclaracaoDireto
 int DeclaracaoDireto() {
     printf("ENTROU DeclaracaoDireto \n");
+    int posicao = ftell(arqin);
+    int tokenAtual = tk;
+
     if (tk == TKId) { // id
         printf("CONSUMIU TOKEN id\n");
         getToken();
@@ -950,6 +974,9 @@ int RestoDeclaracaoDireto() {
 //RestoDeclaracaoDireto2 -> ExpressaoOr ] RestoDeclaracaoDireto | ] RestoDeclaracaoDireto
 int RestoDeclaracaoDireto2() {
     printf("ENTROU RestoDeclaracaoDireto2 \n");
+    int posicao = ftell(arqin);
+    int tokenAtual = tk;
+
     if (ExpressaoOr()) {
         if (tk == TKFechaColchetes) { // ]
             printf("CONSUMIU TOKEN ]\n");
@@ -964,7 +991,11 @@ int RestoDeclaracaoDireto2() {
             printf("Erro, esperava token ']'\n");
             return 0;
         }
-    } else if (tk == TKFechaColchetes) { // ]
+    }
+
+    restaurarDados(posicao, tokenAtual);
+
+    if (tk == TKFechaColchetes) { // ]
         printf("CONSUMIU TOKEN ]\n");
         getToken();
         if (RestoDeclaracaoDireto()) {
@@ -982,6 +1013,9 @@ int RestoDeclaracaoDireto2() {
 //RestoDeclaracaoDireto3 -> ListaParametro ) RestoDeclaracaoDireto | ListaIdentificadores ) RestoDeclaracaoDireto | ) RestoDeclaracaoDireto
 int RestoDeclaracaoDireto3() {
     printf("ENTROU RestoDeclaracaoDireto3 \n");
+    int posicao = ftell(arqin);
+    int tokenAtual = tk;
+
     if (ListaParametro()) {
         if (tk == TKFechaParenteses) { // )
             printf("CONSUMIU TOKEN )\n");
@@ -996,7 +1030,13 @@ int RestoDeclaracaoDireto3() {
             printf("Erro, esperava token ')'\n");
             return 0;
         }
-    } else if (ListaIdentificadores()) {
+    }
+
+    restaurarDados(posicao, tokenAtual);
+    posicao = ftell(arqin);
+    tokenAtual = tk;
+
+    if (ListaIdentificadores()) {
         if (tk == TKFechaParenteses) { // )
             printf("CONSUMIU TOKEN )\n");
             getToken();
@@ -1010,7 +1050,11 @@ int RestoDeclaracaoDireto3() {
             printf("Erro, esperava token ')'\n");
             return 0;
         }
-    } else if (tk == TKFechaParenteses) { // )
+    }
+
+    restaurarDados(posicao, tokenAtual);
+
+    if (tk == TKFechaParenteses) { // )
         printf("CONSUMIU TOKEN )\n");
         getToken();
         return 1;
@@ -1060,11 +1104,7 @@ int ListaParametro1Hash() {
 int DeclaracaoParametro() {
     printf("ENTROU DeclaracaoParametro \n");
     if (DeclaracaoSpec()) {
-        if (DeclaracaoParametro1Linha()) {
-            return 1;
-        } else {
-            return 0;
-        }
+        return DeclaracaoParametro1Linha();
     } else {
         return 0;
     }
@@ -1126,6 +1166,9 @@ int RestoListaIdentificadores() {
 //Funcao -> DeclaracaoSpec Declaracao Funcao1Linha | Declaracao Funcao2Linha
 int Funcao() {
     printf("ENTROU Funcao \n");
+    int posicao = ftell(arqin);
+    int tokenAtual = tk;
+
     if (DeclaracaoSpec()) {
         if (Declaracao()) {
             if (Funcao1Linha()) {
@@ -1136,7 +1179,11 @@ int Funcao() {
         } else {
             return 0;
         }
-    } else if (Declaracao()) {
+    }
+
+    restaurarDados(posicao, tokenAtual);
+
+    if (Declaracao()) {
         if (Funcao2Linha()) {
             return 1;
         } else {
@@ -1150,13 +1197,20 @@ int Funcao() {
 //Funcao2Linha -> ListaDeclaracao ComandoComposto | ComandoComposto
 int Funcao2Linha() {
     printf("ENTROU Funcao2Linha \n");
+    int posicao = ftell(arqin);
+    int tokenAtual = tk;
+
     if (ListaDeclaracao()) {
         if (ComandoComposto()) {
             return 1;
         } else {
             return 0;
         }
-    } else if (ComandoComposto()) {
+    }
+
+    restaurarDados(posicao, tokenAtual);
+
+    if (ComandoComposto()) {
         return 1;
     } else {
         return 0;
@@ -1166,13 +1220,20 @@ int Funcao2Linha() {
 //Funcao1Linha -> ListaDeclaracao ComandoComposto | ComandoComposto
 int Funcao1Linha() {
     printf("ENTROU Funcao1Linha \n");
+    int posicao = ftell(arqin);
+    int tokenAtual = tk;
+
     if (ListaDeclaracao()) {
         if (ComandoComposto()) {
             return 1;
         } else {
             return 0;
         }
-    } else if (ComandoComposto()) {
+    }
+
+    restaurarDados(posicao, tokenAtual);
+
+    if (ComandoComposto()) {
         return 1;
     } else {
         return 0;
@@ -1228,6 +1289,9 @@ int ComandoComposto() {
 //ComandoComposto2 -> } | ListaComando } | ListaDeclaracao ComandoComposto21Linha
 int ComandoComposto2() {
     printf("ENTROU ComandoComposto2 \n");
+    int posicao = ftell(arqin);
+    int tokenAtual = tk;
+
     if (tk == TKFechaChaves) { // }
         printf("CONSUMIU TOKEN }\n");
         getToken();
@@ -1244,7 +1308,10 @@ int ComandoComposto2() {
             return 0;
         }
     }
-    else if (ListaDeclaracao()) {
+
+    restaurarDados(posicao, tokenAtual);
+
+    if (ListaDeclaracao()) {
         if (ComandoComposto21Linha()) {
             return 1;
         } else {
@@ -1314,13 +1381,28 @@ int ListaComando1Hash() {
 //Comando -> ComandoComposto | ComandoExpressao | ComandoSelecao | ComandoIterativo
 int Comando() {
     printf("ENTROU Comando \n");
+    int posicao = ftell(arqin);
+    int tokenAtual = tk;
+
     if (ComandoComposto()) {
         return 1;
-    } else if (ComandoExpressao()) {
+    }
+
+    restaurarDados(posicao, tokenAtual);
+
+    if (ComandoExpressao()) {
         return 1;
-    } else if (ComandoSelecao()) {
+    }
+
+    restaurarDados(posicao, tokenAtual);
+
+    if (ComandoSelecao()) {
         return 1;
-    } else if (ComandoIterativo()) {
+    }
+
+    restaurarDados(posicao, tokenAtual);
+
+    if (ComandoIterativo()) {
         return 1;
     } else {
         return 0;
@@ -1556,9 +1638,16 @@ int ComandoIterativo1Linha() {
 //Init -> Atribuicao | { InitList Init1Linha
 int Init() {
     printf("ENTROU Init \n");
+    int posicao = ftell(arqin);
+    int tokenAtual = tk;
+
     if (Atribuicao()) {
         return 1;
-    } else if (tk == TKAbreChaves) { // {
+    }
+
+    restaurarDados(posicao, tokenAtual);
+
+    if (tk == TKAbreChaves) { // {
         printf("CONSUMIU TOKEN {\n");
         getToken();
         if (InitList()) {
@@ -1608,9 +1697,16 @@ int Init1Linha() {
 //InitList -> Init | RestoInitList
 int InitList() {
     printf("ENTROU InitList \n");
+    int posicao = ftell(arqin);
+    int tokenAtual = tk;
+
     if (Init()) {
         return 1;
-    } else if (RestoInitList()) {
+    }
+
+    restaurarDados(posicao, tokenAtual);
+
+    if (RestoInitList()) {
         return 1;
     } else {
         return 0;
@@ -1641,9 +1737,16 @@ int RestoInitList() {
 //Atribuicao -> ExpressaoOr | ExpressaoUnaria OperadorAtribuicao Atribuicao
 int Atribuicao() {
     printf("ENTROU Atribuicao \n");
+    int posicao = ftell(arqin);
+    int tokenAtual = tk;
+
     if (ExpressaoOr()) {
         return 1;
-    } else if (ExpressaoUnaria()) {
+    }
+
+    restaurarDados(posicao, tokenAtual);
+
+    if (ExpressaoUnaria()) {
         if (OperadorAtribuicao()) {
             if (Atribuicao()) {
                 return 1;
@@ -2102,9 +2205,16 @@ int RestoExpressaoMult() {
 //ExpressaoUnaria -> ExpressaoPosfix | ++ ExpressaoUnaria | -- ExpressaoUnaria | OperadorUnario ExpressaoUnaria
 int ExpressaoUnaria() {
     printf("ENTROU ExpressaoUnaria \n");
+    int posicao = ftell(arqin);
+    int tokenAtual = tk;
+
     if (ExpressaoPosfix()) {
         return 1;
-    } else if (tk == TKIncrementa) { // ++
+    }
+
+    restaurarDados(posicao, tokenAtual);
+
+    if (tk == TKIncrementa) { // ++
         printf("CONSUMIU TOKEN ++\n");
         getToken();
         if (ExpressaoUnaria()) {
@@ -2225,6 +2335,9 @@ int RestoExpressaoPosfix() {
 //RestoExpressaoPosfix2 -> ArgumentList ) RestoExpressaoPosfix | ) RestoExpressaoPosfix
 int RestoExpressaoPosfix2() {
     printf("ENTROU RestoExpressaoPosfix2 \n");
+    int posicao = ftell(arqin);
+    int tokenAtual = tk;
+
     if (ArgumentList()) {
         if (tk == TKFechaParenteses) { // )
             printf("CONSUMIU TOKEN )\n");
@@ -2237,7 +2350,11 @@ int RestoExpressaoPosfix2() {
         } else {
             return 0;
         }
-    } else if (tk == TKFechaParenteses) { // )
+    }
+
+    restaurarDados(posicao, tokenAtual);
+
+    if (tk == TKFechaParenteses) { // )
         printf("CONSUMIU TOKEN )\n");
         getToken();
         if (RestoExpressaoPosfix()) {
